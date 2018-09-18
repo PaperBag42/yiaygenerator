@@ -13,7 +13,7 @@ before finishing the project.
 6. I get first place on the next Jack's Challenge.
 
 ### TODO
-- [ ] Youtube downloading
+- [x] Youtube downloading
 - [ ] Speech to Text
 - [ ] Video editing
 - [ ] Twitter
