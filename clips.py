@@ -1,15 +1,18 @@
-from typing import Tuple
-
 import pytube
 import logging
 import watson_developer_cloud as watson
+import os
 from os import environ
 
-import json
+from typing import Tuple, List
 
 PLAYLIST_URL = 'https://www.youtube.com/playlist?list=PLiWL8lZPZ2_k1JH6urJ_H7HzH9etwmn7M'
 CLIPS_PATH = 'yiaygenerator/static/clips'
-TEMP_FILENAME = 'tmp'
+
+stt = watson.SpeechToTextV1(
+	username=environ['WATSON_USERNAME'],
+	password=environ['WATSON_PASSWORD']
+)
 
 
 def initialize() -> None:
@@ -26,15 +29,19 @@ def update(url: str) -> None:
 	:param url: the video's URL
 	:return: None
 	"""
-	mp4, webm = download(url)
-	print(mp4, webm)
+	video, audio = download(url)
+	text, words = speech_to_text(audio)
 
 
 def download(url: str) -> Tuple[str, str]:
 	"""
-	Downloads the video from YouTube.
+	Downloads the video from YouTube in two different formats.
 	:param url: the video's URL
-	:return: path to the video file
+	:return:
+		path to an MP4 file (video + audio),
+		and path to a WEBM file (audio only)
+	
+	TODO: try using BytesIO
 	"""
 	try:
 		streams = pytube.YouTube(url).streams
@@ -53,16 +60,39 @@ def download(url: str) -> Tuple[str, str]:
 		logging.exception('Could not download video')
 
 
-def speech_to_text(file_path: str) -> None:
-	with open(file_path, 'rb') as f, open('result.json', 'w') as out:
-		out.write(json.dumps(
-			watson.SpeechToTextV1(
-				username=environ['WATSON_USERNAME'],
-				password=environ['WATSON_PASSWORD']
-			).recognize(
-				audio=f,
-				content_type='audio/webm',
-				timestamps=True
-			).get_result(),
-			indent=2
-		))
+def speech_to_text(file_path: str) -> Tuple[str, List]:
+	"""
+	Sends an audio file to the speech-to-text API
+	and gets the results.
+	:param file_path: path to the audio file
+	:return:
+		The audio's complete transcript,
+		and timestamps for each word.
+	"""
+	transcripts = ''
+	timestamps = []
+	
+	with open(file_path, 'rb') as f:
+		results = stt.recognize(
+			audio=f,
+			content_type='audio/webm',
+			customization_id=environ.get('WATSON_CUSTOMIZATION_ID'),  # costs money
+			timestamps=True
+			# TODO: try smart_formatting
+		).get_result()['results']
+	
+	for result in results:
+		alternative = result['alternatives'][0]  # only one alternative by default
+		
+		transcripts += alternative['transcript']
+		timestamps.extend(alternative['timestamps'])
+
+	return transcripts, timestamps
+
+
+'''
+try:
+	len(os.listdir)
+except FileNotFoundError:
+	0
+'''
