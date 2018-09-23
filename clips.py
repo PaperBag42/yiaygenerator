@@ -1,6 +1,7 @@
 import pytube
 import logging
 import watson_developer_cloud as watson
+import io
 import os
 from os import environ
 
@@ -30,18 +31,19 @@ def update(url: str) -> None:
 	:return: None
 	"""
 	video, audio = download(url)
+	video.seek(0)
+	audio.seek(0)
+	
 	text, words = speech_to_text(audio)
 
 
-def download(url: str) -> Tuple[str, str]:
+def download(url: str) -> Tuple[io.BytesIO, io.BytesIO]:
 	"""
 	Downloads the video from YouTube in two different formats.
 	:param url: the video's URL
 	:return:
 		path to an MP4 file (video + audio),
 		and path to a WEBM file (audio only)
-	
-	TODO: try using BytesIO
 	"""
 	try:
 		streams = pytube.YouTube(url).streams
@@ -49,22 +51,22 @@ def download(url: str) -> Tuple[str, str]:
 			streams.filter(
 				progressive=True,
 				subtype='mp4'
-			).first().download(filename='video'),
+			).first().stream_to_buffer(),
 			streams.filter(
 				only_audio=True,
 				subtype='webm'
-			).first().download(filename='audio')
+			).first().stream_to_buffer()
 		)
 		
 	except pytube.exceptions.PytubeError:
 		logging.exception('Could not download video')
 
 
-def speech_to_text(file_path: str) -> Tuple[str, List]:
+def speech_to_text(stream: io.BytesIO) -> Tuple[str, List]:
 	"""
 	Sends an audio file to the speech-to-text API
 	and gets the results.
-	:param file_path: path to the audio file
+	:param stream: audio file binary data
 	:return:
 		The audio's complete transcript,
 		and timestamps for each word.
@@ -72,16 +74,14 @@ def speech_to_text(file_path: str) -> Tuple[str, List]:
 	transcripts = ''
 	timestamps = []
 	
-	with open(file_path, 'rb') as f:
-		results = stt.recognize(
-			audio=f,
-			content_type='audio/webm',
-			customization_id=environ.get('WATSON_CUSTOMIZATION_ID'),  # costs money
-			timestamps=True
-			# TODO: try smart_formatting
-		).get_result()['results']
-	
-	for result in results:
+	for result in stt.recognize(
+		audio=stream,
+		content_type='audio/webm',
+		customization_id=environ.get('WATSON_CUSTOMIZATION_ID'),  # costs money
+		timestamps=True
+		# TODO: try smart_formatting
+	).get_result()['results']:
+		
 		alternative = result['alternatives'][0]  # only one alternative by default
 		
 		transcripts += alternative['transcript']
