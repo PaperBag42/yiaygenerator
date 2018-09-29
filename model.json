@@ -1,0 +1,39 @@
+{
+	"words": [
+		{
+			"display_as": "YIAY",
+			"sounds_like": [
+				"yeah I",
+				"yeah I."
+			],
+			"count": 1,
+			"source": [
+				"user"
+			],
+			"word": "YIAY"
+		},
+		{
+			"display_as": "answers",
+			"sounds_like": [
+				"cancers"
+			],
+			"count": 1,
+			"source": [
+				"user"
+			],
+			"word": "answers"
+		},
+		{
+			"display_as": "finna",
+			"sounds_like": [
+				"Finnan",
+				"Finno"
+			],
+			"count": 1,
+			"source": [
+				"user"
+			],
+			"word": "finna"
+		}
+	]
+}

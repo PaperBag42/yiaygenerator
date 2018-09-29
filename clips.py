@@ -1,15 +1,22 @@
 import pytube
-import logging
 import watson_developer_cloud as watson
+from watson_developer_cloud.speech_to_text_v1 import CustomWord
+
+import logging  # TODO: call basicConfig() on initialization
+import json
+
 import io
+import time
 import re
-import os
+import collections
 from os import environ
 
 from typing import Tuple, List
 
 PLAYLIST_URL = 'https://www.youtube.com/playlist?list=PLiWL8lZPZ2_k1JH6urJ_H7HzH9etwmn7M'
+STT_PATH = 'expr/stt'
 CLIPS_PATH = 'yiaygenerator/static/clips'
+MODEL_PATH = 'model.json'
 
 WORD, START, END = 0, 1, 2
 
@@ -23,30 +30,32 @@ def initialize() -> None:
 	"""
 	Initializes the clips to be used as parts of the final video.
 	"""
-	for url in pytube.Playlist(PLAYLIST_URL).parse_links():
-		update(url)
+	for i, url in enumerate(pytube.Playlist(PLAYLIST_URL).parse_links(), start=1):
+		update(url, i)
 
 
-def update(url: str) -> None:
+def update(url: str, i: int) -> None:
 	"""
 	Updates the clips with the contents of a new YIAY video.
 	:param url: the video's URL
+	:param i: the video's index in the playlist
 	:return: None
 	"""
-	video, audio = download(url)
+	video, audio = download(url, i)
 	video.seek(0)
 	audio.seek(0)
 	
-	text, words = speech_to_text(audio)
+	text, words = speech_to_text(audio, i)
 
 
-def download(url: str) -> Tuple[io.BytesIO, io.BytesIO]:
+def download(url: str, i: int) -> Tuple[io.BytesIO, io.BytesIO]:
 	"""
 	Downloads the video from YouTube in two different formats.
 	:param url: the video's URL
+	:param i: the video's index in the playlist
 	:return:
-		path to an MP4 file (video + audio),
-		and path to a WEBM file (audio only)
+		buffer containing an MP4 file (video + audio),
+		and buffer containing a WEBM file (audio only)
 	"""
 	try:
 		streams = pytube.YouTube(url).streams
@@ -62,19 +71,45 @@ def download(url: str) -> Tuple[io.BytesIO, io.BytesIO]:
 		)
 		
 	except pytube.exceptions.PytubeError:
-		logging.exception('Could not download video')
+		logging.exception('Could not download YIAY #%03d', i)
 
 
-def speech_to_text(stream: io.BytesIO) -> Tuple[str, List]:
+def create_model() -> None:
 	"""
-	Sends an audio file to the speech-to-text API
-	and gets the results.
+	Creates a language model for the speech-to-text service,
+	and prints its ID.
+	NOTE: should only be used once.
+	"""
+	print(stt.create_language_model(
+		'Jack custom model',
+		'en-US_BroadbandModel'
+	).get_result()['customization_id'])
+
+
+def customize_words(*words: CustomWord) -> None:
+	model_id = environ['WATSON_CUSTOMIZATION_ID']
+	
+	stt.add_words(model_id, list(words))
+	
+	while stt.get_model(model_id).get_result()['status'] != 'ready':
+		time.sleep(5)
+	stt.train_language_model(model_id)
+	
+	with open(MODEL_PATH, 'w') as f:
+		json.dump(stt.list_words(model_id).get_result(), f, indent='\t')
+
+
+def speech_to_text(stream: io.BytesIO, i: int) -> Tuple[str, List]:
+	"""
+	Sends an audio file to the speech-to-text API,
+	gets the results and saves them in a JSON file.
 	:param stream: audio file binary data
+	:param i: the video's index in the playlist
 	:return:
 		The audio's complete transcript,
 		and timestamps for each word.
 	"""
-	transcripts = ''
+	transcript = ''
 	timestamps = []
 	
 	for result in stt.recognize(
@@ -88,24 +123,31 @@ def speech_to_text(stream: io.BytesIO) -> Tuple[str, List]:
 		
 		alternative = result['alternatives'][0]  # only one alternative by default
 		
-		transcripts += alternative['transcript']
+		transcript += alternative['transcript']
 		timestamps.extend(alternative['timestamps'])
+	
+	with open('%s/%03d.json' % (STT_PATH, i), 'w') as f:
+		json.dump({
+			'transcript': transcript,
+			'timestamps': timestamps
+		}, f, indent='\t')
+	
+	return transcript, timestamps
 
-	return transcripts, timestamps
 
-
-RE = (
+PATTERN = (
 	r'(?P<intro>.*?I asked you )'
+	r'(?P<question>.*?)'
+	r'(?P<start>(here .*?)?answers )'
 	r'(?P<content>.*)'
 	r'(?P<outro>leave your answers .*?yeah I )'
-	r'.*'
+	r'(?P<end>.*)'
 )
-# subscribe/please subscribe ?
 
 
 def split(text: str, timestamps: List[List]):
 	# TODO: remove emotions
-	m = re.match(RE, text)
+	match = re.match(PATTERN, text)
 	
 	'''
 	# intro
