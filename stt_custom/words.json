@@ -6,8 +6,9 @@
 				"yeah I",
 				"yeah I."
 			],
-			"count": 1,
+			"count": 2,
 			"source": [
+				"outro.txt",
 				"user"
 			],
 			"word": "YIAY"

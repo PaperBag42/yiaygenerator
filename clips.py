@@ -6,6 +6,7 @@ import logging  # TODO: call basicConfig() on initialization
 import json
 
 import io
+import os
 import time
 import re
 import collections
@@ -14,9 +15,9 @@ from os import environ
 from typing import Tuple, List
 
 PLAYLIST_URL = 'https://www.youtube.com/playlist?list=PLiWL8lZPZ2_k1JH6urJ_H7HzH9etwmn7M'
-STT_PATH = 'expr/stt'
-CLIPS_PATH = 'yiaygenerator/static/clips'
-MODEL_PATH = 'model.json'
+STT_PATH = 'expr/stt/'
+CLIPS_PATH = 'yiaygenerator/static/clips/'
+MODEL_PATH = 'stt_custom/words.json'
 
 WORD, START, END = 0, 1, 2
 
@@ -90,8 +91,24 @@ def customize_words(*words: CustomWord) -> None:
 	model_id = environ['WATSON_CUSTOMIZATION_ID']
 	
 	stt.add_words(model_id, list(words))
+	train(model_id)
+
+
+def customize_corpus(path: str):
+	model_id = environ['WATSON_CUSTOMIZATION_ID']
 	
-	while stt.get_model(model_id).get_result()['status'] != 'ready':
+	with open(path) as f:
+		stt.add_corpus(
+			model_id,
+			os.path.basename(path),
+			f,
+			allow_overwrite=True
+		)
+	train(model_id)
+
+
+def train(model_id: str) -> None:
+	while stt.get_language_model(model_id).get_result()['status'] != 'ready':
 		time.sleep(5)
 	stt.train_language_model(model_id)
 	
@@ -126,7 +143,7 @@ def speech_to_text(stream: io.BytesIO, i: int) -> Tuple[str, List]:
 		transcript += alternative['transcript']
 		timestamps.extend(alternative['timestamps'])
 	
-	with open('%s/%03d.json' % (STT_PATH, i), 'w') as f:
+	with open(f'{STT_PATH}{i:03d}.json', 'w') as f:
 		json.dump({
 			'transcript': transcript,
 			'timestamps': timestamps
@@ -136,16 +153,16 @@ def speech_to_text(stream: io.BytesIO, i: int) -> Tuple[str, List]:
 
 
 PATTERN = (
-	r'(?P<intro>.*?I asked you )'
+	r'(?P<intro>.*?asked you )'
 	r'(?P<question>.*?)'
 	r'(?P<start>(here .*?)?answers )'
 	r'(?P<content>.*)'
-	r'(?P<outro>leave your answers .*?yeah I )'
+	r'(?P<outro>leave your answers .*?YIAY )'
 	r'(?P<end>.*)'
 )
 
 
-def split(text: str, timestamps: List[List]):
+def parse(text: str, timestamps: List[List]):
 	# TODO: remove emotions
 	match = re.match(PATTERN, text)
 	
@@ -175,4 +192,6 @@ try:
 	len(os.listdir)
 except FileNotFoundError:
 	0
+
+defaultdict
 '''
