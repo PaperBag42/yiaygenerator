@@ -1,4 +1,4 @@
-import pytube
+import youtube_dl
 import watson_developer_cloud as watson
 from watson_developer_cloud.speech_to_text_v1 import CustomWord
 
@@ -12,12 +12,14 @@ import re
 import collections
 from os import environ
 
-from typing import Tuple, List
+from typing import Tuple, List, Iterable
 
 PLAYLIST_URL = 'https://www.youtube.com/playlist?list=PLiWL8lZPZ2_k1JH6urJ_H7HzH9etwmn7M'
 STT_PATH = 'expr/stt/'
-CLIPS_PATH = 'yiaygenerator/static/clips/'
+CLIPS_PATH = 'expr/clips/'
 MODEL_PATH = 'stt_custom/words.json'
+LOG_PATH = 'expr/log.csv'
+
 
 WORD, START, END = 0, 1, 2
 
@@ -27,17 +29,16 @@ stt = watson.SpeechToTextV1(
 )
 
 
-def initialize() -> None:
+def list_videos() -> Iterable[Tuple[int, str]]:
 	"""
-	Initializes the clips to be used as parts of the final video.
+	Lists the urls of all YIAY videos.
 	"""
-	for i, url in enumerate(pytube.Playlist(PLAYLIST_URL).parse_links(), start=1):
-		update(url, i)
+	pass  # return enumerate(pytube.Playlist(PLAYLIST_URL).parse_links(), start=1)
 
 
-def update(url: str, i: int) -> None:
+def generate(i: int, url: str) -> None:
 	"""
-	Updates the clips with the contents of a new YIAY video.
+	Generates clips from a new YIAY video.
 	:param url: the video's URL
 	:param i: the video's index in the playlist
 	:return: None
@@ -58,21 +59,7 @@ def download(url: str, i: int) -> Tuple[io.BytesIO, io.BytesIO]:
 		buffer containing an MP4 file (video + audio),
 		and buffer containing a WEBM file (audio only)
 	"""
-	try:
-		streams = pytube.YouTube(url).streams
-		return (
-			streams.filter(
-				progressive=True,
-				subtype='mp4'
-			).first().stream_to_buffer(),
-			streams.filter(
-				only_audio=True,
-				subtype='webm'
-			).first().stream_to_buffer()
-		)
-		
-	except pytube.exceptions.PytubeError:
-		logging.exception('Could not download YIAY #%03d', i)
+	pass  # TODO: use youtube-dl
 
 
 def create_model() -> None:
@@ -152,39 +139,20 @@ def speech_to_text(stream: io.BytesIO, i: int) -> Tuple[str, List]:
 	return transcript, timestamps
 
 
-PATTERN = (
-	r'(?P<intro>.*?asked you )'
-	r'(?P<question>.*?)'
-	r'(?P<start>(here .*?)?answers )'
-	r'(?P<content>.*)'
-	r'(?P<outro>leave your answers .*?YIAY )'
-	r'(?P<end>.*)'
+pattern = re.compile(
+	r'(?P<intro>.*?asked you )?'  # ok
+	r'(?P<question>.*?)'  # ok
+	r'(?P<start>(here .*?)?answers )'  # will probably break a lot (he sometimes says "let's go" or other random stuff)
+	r'(?P<content>.*)'  # ok
+	# TODO: sponsor
+	r'(?P<outro>(leave|let) .*?YIAY )'  # ok?
+	r'(?P<end>.*)'  # ok
 )
 
 
 def parse(text: str, timestamps: List[List]):
 	# TODO: remove emotions
-	match = re.match(PATTERN, text)
-	
-	'''
-	# intro
-	part, text = text.split(INTRO, 1)
-	count = part.count(' ') + INTRO_COUNT
-	
-	intro = timestamps[0][START], timestamps[count - 1][END]
-	timestamps = timestamps[count:]
-	
-	# outro
-	ind = text.rindex(OUTRO)
-	part = text[ind:]
-	text = text[:ind]
-	count = part.count(' ')
-	
-	outro = timestamps[-count][START]
-	timestamps = timestamps[:-count]
-	
-	return timestamps, intro, outro
-	'''
+	match = pattern.match(text)
 	
 
 '''
@@ -195,3 +163,11 @@ except FileNotFoundError:
 
 defaultdict
 '''
+
+
+if __name__ == '__main__':
+	"""
+	Generates all clips to be used as parts of the final video.
+	"""
+	for video in list_videos():
+		generate(*video)
