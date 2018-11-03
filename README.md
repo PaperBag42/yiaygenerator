@@ -21,7 +21,7 @@ before finishing the project.
 
 ### Tools
 - Django
-- pytube
+- Youtube-DL
 - Watson Developer Cloud
 
 ### Q&A

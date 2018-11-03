@@ -1,6 +1,8 @@
-import youtube_dl
 import watson_developer_cloud as watson
 from watson_developer_cloud.speech_to_text_v1 import CustomWord
+
+import youtube
+from youtube import Video
 
 import logging  # TODO: call basicConfig() on initialization
 import json
@@ -12,9 +14,8 @@ import re
 import collections
 from os import environ
 
-from typing import Tuple, List, Iterable
+from typing import Tuple, List
 
-PLAYLIST_URL = 'https://www.youtube.com/playlist?list=PLiWL8lZPZ2_k1JH6urJ_H7HzH9etwmn7M'
 STT_PATH = 'expr/stt/'
 CLIPS_PATH = 'expr/clips/'
 MODEL_PATH = 'stt_custom/words.json'
@@ -29,37 +30,13 @@ stt = watson.SpeechToTextV1(
 )
 
 
-def list_videos() -> Iterable[Tuple[int, str]]:
-	"""
-	Lists the urls of all YIAY videos.
-	"""
-	pass  # return enumerate(pytube.Playlist(PLAYLIST_URL).parse_links(), start=1)
-
-
-def generate(i: int, url: str) -> None:
+def generate(i: int) -> None:
 	"""
 	Generates clips from a new YIAY video.
-	:param url: the video's URL
 	:param i: the video's index in the playlist
-	:return: None
 	"""
-	video, audio = download(url, i)
-	video.seek(0)
-	audio.seek(0)
-	
-	text, words = speech_to_text(audio, i)
-
-
-def download(url: str, i: int) -> Tuple[io.BytesIO, io.BytesIO]:
-	"""
-	Downloads the video from YouTube in two different formats.
-	:param url: the video's URL
-	:param i: the video's index in the playlist
-	:return:
-		buffer containing an MP4 file (video + audio),
-		and buffer containing a WEBM file (audio only)
-	"""
-	pass  # TODO: use youtube-dl
+	with Video(i, True) as file:
+		text, words = speech_to_text(file, i)
 
 
 def create_model() -> None:
@@ -84,11 +61,11 @@ def customize_words(*words: CustomWord) -> None:
 def customize_corpus(path: str):
 	model_id = environ['WATSON_CUSTOMIZATION_ID']
 	
-	with open(path) as f:
+	with open(path) as file:
 		stt.add_corpus(
 			model_id,
 			os.path.basename(path),
-			f,
+			file,
 			allow_overwrite=True
 		)
 	train(model_id)
@@ -103,7 +80,7 @@ def train(model_id: str) -> None:
 		json.dump(stt.list_words(model_id).get_result(), f, indent='\t')
 
 
-def speech_to_text(stream: io.BytesIO, i: int) -> Tuple[str, List]:
+def speech_to_text(stream: io.BufferedReader, i: int) -> Tuple[str, List]:
 	"""
 	Sends an audio file to the speech-to-text API,
 	gets the results and saves them in a JSON file.
@@ -130,11 +107,11 @@ def speech_to_text(stream: io.BytesIO, i: int) -> Tuple[str, List]:
 		transcript += alternative['transcript']
 		timestamps.extend(alternative['timestamps'])
 	
-	with open(f'{STT_PATH}{i:03d}.json', 'w') as f:
+	with open(f'{STT_PATH}{i:03d}.json', 'w') as file:
 		json.dump({
 			'transcript': transcript,
 			'timestamps': timestamps
-		}, f, indent='\t')
+		}, file, indent='\t')
 	
 	return transcript, timestamps
 
@@ -165,9 +142,13 @@ defaultdict
 '''
 
 
-if __name__ == '__main__':
+def main():
 	"""
 	Generates all clips to be used as parts of the final video.
 	"""
-	for video in list_videos():
-		generate(*video)
+	for i in range(youtube.PLAYLIST_LEN):
+		generate(i)
+
+
+if __name__ == '__main__':
+	main()
