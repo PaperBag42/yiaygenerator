@@ -24,9 +24,9 @@ def speech_to_text(i: int):
 	if path.isfile(filename):
 		with open(filename) as file:
 			data = json.load(file)
-			return data['transcript'], data['words']
+			return data['transcript'], data['timestamps']
 	else:
-		with youtube.Video(i, True) as file:
+		with youtube.Video(i, only_audio=True) as file:
 			return request(file, filename)
 
 

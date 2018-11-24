@@ -1,7 +1,7 @@
 import youtube_dl
 import os
 
-PLAYLIST_LEN = 452  # this kinda sucks
+PLAYLIST_LEN = 453  # this kinda sucks
 PLAYLIST_URL = ('https://www.youtube.com/playlist?list=PLiWL8lZPZ2_k1JH6urJ_H7HzH9etwmn7M',)
 
 
@@ -14,9 +14,10 @@ class Video(object):
 	def __init__(self, i: int, only_audio: bool):
 		self.fmt = 'bestaudio[ext=webm]' if only_audio else 'best[ext=mp4]'
 		self.opts = {
-			'playlist_items': str(PLAYLIST_LEN - i),
+			'playlist_items': str(PLAYLIST_LEN - i),  # start counting from 0
 			'format': self.fmt,
 			'outtmpl': self.fmt,
+			'quiet': True
 			# These don't work
 			# 'keepvideo': False
 			# 'playlistreverse': True

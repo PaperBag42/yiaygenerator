@@ -18,12 +18,13 @@ def generate(i: int) -> None:
 	Generates clips from a new YIAY video.
 	:param i: the video's index in the playlist
 	"""
+	pass
 
 
 pattern = re.compile(
 	r'(?P<intro>.*?asked you )?'  # ok
 	r'(?P<question>.*?)'  # ok
-	r'(?P<start>(here .*?)?answers )'  # will probably break a lot (he sometimes says "let's go" or other random stuff)
+	r'(?P<start>(here .*?)?answers )?'  # will probably break a lot (he sometimes says "let's go" or other random stuff)
 	r'(?P<content>.*)'  # ok
 	# TODO: sponsor
 	r'(?P<outro>(leave|let) .*?YIAY )'  # ok?
