@@ -34,8 +34,8 @@ def speech_to_text(i: int):
 			data = json.load(file)
 			return data['transcript'], data['timestamps']
 	else:
-		info(f'Making an API request for YIAY #{i + 1:03d}...')
 		with youtube.video(i, only_audio=True) as file:
+			info(f'Making an API request for YIAY #{i + 1:03d}...')
 			return request(file, filename)
 
 
