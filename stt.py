@@ -9,6 +9,7 @@ import json
 import time
 import io
 from os import path, environ
+from logging import info
 
 STT_PATH = 'expr/stt/'
 MODEL_PATH = 'stt_custom/words.json'
@@ -20,12 +21,20 @@ stt = watson.SpeechToTextV1(
 
 
 def speech_to_text(i: int):
+	"""
+	Loads the speech-to-text transcript for a YIAY video.
+	Makes an API request if a transcript was not found.
+	:param i: the video's index in the playlist (counting from 0)
+	:return: a full transcript
+	"""
 	filename = f'{STT_PATH}{i:03d}.json'
 	if path.isfile(filename):
+		info(f'Loading transcript for YIAY #{i + 1:03d} from {filename}.')
 		with open(filename) as file:
 			data = json.load(file)
 			return data['transcript'], data['timestamps']
 	else:
+		info(f'Making an API request for YIAY #{i + 1:03d}...')
 		with youtube.Video(i, only_audio=True) as file:
 			return request(file, filename)
 
