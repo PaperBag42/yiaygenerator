@@ -55,7 +55,7 @@ def request(stream: io.BufferedReader, out: str) -> Tuple[str, List]:
 	for result in stt.recognize(
 			audio=stream,
 			content_type='audio/webm',
-			customization_id=environ.get('WATSON_CUSTOMIZATION_ID'),  # costs money
+			language_customization_id=environ.get('WATSON_CUSTOMIZATION_ID'),  # costs money
 			timestamps=True,
 			profanity_filter=False
 	).get_result()['results']:
