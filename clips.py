@@ -16,6 +16,7 @@ WORD, START, END = 0, 1, 2
 def generate(i: int) -> None:
 	"""
 	Generates clips from a new YIAY video.
+	
 	:param i: the video's index in the playlist
 	"""
 	pass

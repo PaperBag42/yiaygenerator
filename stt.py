@@ -20,10 +20,11 @@ stt = watson.SpeechToTextV1(
 )
 
 
-def speech_to_text(i: int):
+def speech_to_text(i: int) -> Tuple[str, List]:
 	"""
 	Loads the speech-to-text transcript for a YIAY video.
 	Makes an API request if a transcript was not found.
+	
 	:param i: the video's index in the playlist (counting from 0)
 	:return: a full transcript
 	"""
@@ -43,6 +44,7 @@ def request(stream: io.BufferedReader, out: str) -> Tuple[str, List]:
 	"""
 	Sends an audio file to the speech-to-text API,
 	gets the results and saves them in a JSON file.
+	
 	:param stream: audio file binary data
 	:param out: filename to save the result in
 	:return:

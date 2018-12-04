@@ -15,8 +15,10 @@ PLAYLIST_URL = ('https://www.youtube.com/playlist?list=PLiWL8lZPZ2_k1JH6urJ_H7Hz
 def video(i: int, only_audio: bool) -> ContextManager[io.BufferedReader]:
 	"""
 	Downloads a video from YouTube.
+
 	:param i: the video's index in the playlist (counting from 0)
 	:param only_audio: True to download only audio, False to download video and audio
+	:return: a context manager which returns the video file and removes it on exit.
 	"""
 	fmt = 'bestaudio[ext=webm]' if only_audio else 'best[ext=mp4]'
 	
