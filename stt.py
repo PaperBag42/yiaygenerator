@@ -14,7 +14,7 @@ from logging import info
 STT_PATH = 'expr/stt/'
 MODEL_PATH = 'stt_custom/words.json'
 
-stt = watson.SpeechToTextV1(
+service = watson.SpeechToTextV1(
 	username=environ['WATSON_USERNAME'],
 	password=environ['WATSON_PASSWORD']
 )
@@ -25,8 +25,8 @@ def speech_to_text(i: int) -> Tuple[str, List]:
 	Loads the speech-to-text transcript for a YIAY video.
 	Makes an API request if a transcript was not found.
 	
-	:param i: the video's index in the playlist (counting from 0)
-	:return: a full transcript
+	:param i: the video's index in the playlist
+	:return: a full transcript, and timestamps for each word
 	"""
 	filename = f'{STT_PATH}{i:03d}.json'
 	if path.isfile(filename):
@@ -54,7 +54,7 @@ def request(stream: io.BufferedReader, out: str) -> Tuple[str, List]:
 	transcript = ''
 	timestamps = []
 	
-	for result in stt.recognize(
+	for result in service.recognize(
 			audio=stream,
 			content_type='audio/webm',
 			language_customization_id=environ.get('WATSON_CUSTOMIZATION_ID'),  # costs money
@@ -84,7 +84,7 @@ def create_model() -> None:
 	and prints its ID.
 	NOTE: should only be used once.
 	"""
-	print(stt.create_language_model(
+	print(service.create_language_model(
 		'Jack custom model',
 		'en-US_BroadbandModel'
 	).get_result()['customization_id'])
@@ -93,7 +93,7 @@ def create_model() -> None:
 def customize_words(*words: CustomWord) -> None:
 	model_id = environ['WATSON_CUSTOMIZATION_ID']
 	
-	stt.add_words(model_id, list(words))
+	service.add_words(model_id, list(words))
 	train(model_id)
 
 
@@ -101,7 +101,7 @@ def customize_corpus(filename: str):
 	model_id = environ['WATSON_CUSTOMIZATION_ID']
 	
 	with open(filename) as file:
-		stt.add_corpus(
+		service.add_corpus(
 			model_id,
 			path.basename(filename),
 			file,
@@ -111,9 +111,9 @@ def customize_corpus(filename: str):
 
 
 def train(model_id: str) -> None:
-	while stt.get_language_model(model_id).get_result()['status'] != 'ready':
+	while service.get_language_model(model_id).get_result()['status'] != 'ready':
 		time.sleep(5)
-	stt.train_language_model(model_id)
+	service.train_language_model(model_id)
 	
 	with open(MODEL_PATH, 'w') as f:
-		json.dump(stt.list_words(model_id).get_result(), f, indent='\t')
+		json.dump(service.list_words(model_id).get_result(), f, indent='\t')
