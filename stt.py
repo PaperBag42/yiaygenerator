@@ -29,13 +29,13 @@ def speech_to_text(i: int):
 	"""
 	filename = f'{STT_PATH}{i:03d}.json'
 	if path.isfile(filename):
-		info(f'Loading transcript for YIAY #{i + 1:03d} from {filename}.')
+		info(f'Loading transcript for YIAY #{i:03d} from {filename}.')
 		with open(filename) as file:
 			data = json.load(file)
 			return data['transcript'], data['timestamps']
 	else:
 		with youtube.video(i, only_audio=True) as file:
-			info(f'Making an API request for YIAY #{i + 1:03d}...')
+			info(f'Making an API request for YIAY #{i:03d}...')
 			return request(file, filename)
 
 

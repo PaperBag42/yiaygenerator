@@ -20,9 +20,9 @@ def video(i: int, only_audio: bool) -> ContextManager[io.BufferedReader]:
 	"""
 	fmt = 'bestaudio[ext=webm]' if only_audio else 'best[ext=mp4]'
 	
-	info(f'Downloading YIAY #{i + 1:03d} as {"WEBM" if only_audio else "MP4"}...')
+	info(f'Downloading YIAY #{i:03d} as {"WEBM" if only_audio else "MP4"}...')
 	with youtube_dl.YoutubeDL({
-		'playlist_items': str(PLAYLIST_LEN - i),  # start counting from 0
+		'playlist_items': str(PLAYLIST_LEN + 1 - i),
 		'format': fmt,
 		'outtmpl': fmt,
 		'quiet': True
