@@ -6,8 +6,8 @@ import watson_developer_cloud as watson
 from watson_developer_cloud.speech_to_text_v1 import CustomWord
 
 import json
-import time
 import io
+from time import sleep
 from os import path, environ
 
 import logging
@@ -23,7 +23,7 @@ service = watson.SpeechToTextV1(
 # TODO: would be cool if I registered a callback here
 
 
-def speech_to_text(inds: Iterable[int]) -> Generator[Tuple[int, str, List]]:
+def speech_to_text(inds: Iterable[int]) -> Generator[Tuple[int, str, List], None, None]:
 	"""
 	Loads speech-to-text transcripts for a list of YIAY videos.
 	Makes an API request for each transcript that was not found.
@@ -54,32 +54,44 @@ def request(stream: io.BufferedReader, i: int) -> str:
 	:param i: the video's index in the playlist
 	:return: the created job's ID.
 	"""
-	try:
-		info(f'Making an API request for YIAY #{i:03d}...')
-		return service.create_job(
-				audio=stream,
-				content_type='audio/webm',
-				language_customization_id=environ.get('WATSON_CUSTOMIZATION_ID'),  # costs money
-				timestamps=True,
-				profanity_filter=False
-			).get_result()['id']
-		
-	except watson.WatsonApiException:  # TODO: get response from support
-		logging.warning(f'YIAY #{i:03d}: Got the weird error again, retrying...')
-		stream.seek(0)
-		time.sleep(5)
-		
-		return request(stream, i)
+	info(f'Making an API request for YIAY #{i:03d}...')
+	return service.create_job(
+			audio=stream,
+			content_type='audio/webm',
+			language_customization_id=environ.get('WATSON_CUSTOMIZATION_ID'),  # costs money
+			timestamps=True,
+			profanity_filter=False
+		).get_result()['id']
 
 
-def resolve(ids: Dict[int]) -> Generator[Tuple[int, str, List]]:
+def resolve(ids: Dict[str, int]) -> Generator[Tuple[int, str, List], None, None]:
 	"""
 	Waits for created jobs to complete, and fetches their responses.
 	
 	:param ids: a dict mapping each job ID to the index of the video it is working on
 	:return: index, transcript and timestamps for each job resolved
 	"""
-	pass
+	while ids:
+		for job in service.check_jobs().get_result()['recognitions']:
+			id_, status = job['id'], job['status']
+			i = ids[id_]
+			
+			for warning in job.get('warnings', []):
+				logging.warning(f'YIAY #{i:03d}: Warning from job: {warning}')
+			
+			if status == 'completed':
+				logging.info(f'Job completed for YIAY #{i:03d}.')
+				yield process(i, service.check_job(id_).get_result())
+				
+			elif status == 'failed':
+				logging.error(f'Job failed for YIAY #{i:03d}.')
+			
+			if status in ('completed', 'failed'):
+				service.delete_job(id_)
+				del ids[id_]
+		
+		if ids:
+			sleep(20)
 
 
 def process(i: int, response: Dict) -> Tuple[int, str, List]:
@@ -94,7 +106,9 @@ def process(i: int, response: Dict) -> Tuple[int, str, List]:
 	transcript = ''
 	timestamps = []
 	
-	for result in response['results']:
+	# FIXME: response returns with 200 but contains an error message?
+	# {'code': 500, 'error': 'failed when posting audio to the STT service'}
+	for result in response['results'][0]['results']:
 		alternative = result['alternatives'][0]  # only one alternative by default
 		
 		transcript += alternative['transcript']
@@ -147,7 +161,7 @@ def customize_corpus(filename: str):
 
 def train(model_id: str) -> None:
 	while service.get_language_model(model_id).get_result()['status'] != 'ready':
-		time.sleep(5)
+		sleep(5)
 	service.train_language_model(model_id)
 	
 	with open(MODEL_PATH, 'w') as f:
