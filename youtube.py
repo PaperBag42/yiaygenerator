@@ -24,14 +24,14 @@ def video(i: int, only_audio: bool) -> ContextManager[io.BufferedReader]:
 	
 	info(f'Downloading YIAY #{i:03d} as {"WEBM" if only_audio else "MP4"}...')
 	with youtube_dl.YoutubeDL({
-		'playlist_items': str(PLAYLIST_LEN + 1 - i),
-		'format': fmt,
-		'outtmpl': fmt,
-		'quiet': True
-		# These don't work
-		# 'keepvideo': False
-		# 'playlistreverse': True
-	}) as yt:
+			'playlist_items': str(PLAYLIST_LEN + 1 - i),
+			'format': fmt,
+			'outtmpl': fmt,
+			'quiet': True
+			# These don't work
+			# 'keepvideo': False
+			# 'playlistreverse': True
+		}) as yt:
 		yt.download(PLAYLIST_URL)
 	
 	file = open(fmt, 'rb')

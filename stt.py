@@ -1,17 +1,21 @@
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 
 import youtube
 
+import requests
 import watson_developer_cloud as watson
 from watson_developer_cloud.speech_to_text_v1 import CustomWord
 
 import json
 import time
 import io
+from time import sleep
 from os import path, environ
+
+import logging
 from logging import info
 
-STT_PATH = 'expr/stt/'
+STT_PATH = 'expr/stt/{ind:03d}.json'
 MODEL_PATH = 'stt_custom/words.json'
 
 service = watson.SpeechToTextV1(
@@ -28,7 +32,7 @@ def speech_to_text(i: int) -> Tuple[str, List]:
 	:param i: the video's index in the playlist
 	:return: a full transcript, and timestamps for each word
 	"""
-	filename = f'{STT_PATH}{i:03d}.json'
+	filename = STT_PATH.format(ind=i)
 	if path.isfile(filename):
 		info(f'Loading transcript for YIAY #{i:03d} from {filename}.')
 		with open(filename) as file:
@@ -36,38 +40,58 @@ def speech_to_text(i: int) -> Tuple[str, List]:
 			return data['transcript'], data['timestamps']
 	else:
 		with youtube.video(i, only_audio=True) as file:
-			info(f'Making an API request for YIAY #{i:03d}...')
-			return request(file, filename)
+			return request(i, file)
 
 
-def request(stream: io.BufferedReader, out: str) -> Tuple[str, List]:
+def request(i: int, stream: io.BufferedReader) -> Tuple[str, List]:
 	"""
 	Sends an audio file to the speech-to-text API,
 	gets the results and saves them in a JSON file.
 	
+	:param i: the video's index in the playlist
 	:param stream: audio file binary data
-	:param out: filename to save the result in
 	:return:
 		The audio's complete transcript,
 		and timestamps for each word.
 	"""
+	info(f'Making an API request for YIAY #{i:03d}...')
+	try:
+		return process(i, service.recognize(
+				audio=stream,
+				content_type='audio/webm',
+				language_customization_id=environ.get('WATSON_CUSTOMIZATION_ID'),  # costs money
+				timestamps=True,
+				profanity_filter=False
+			).get_result())
+	
+	except (watson.WatsonApiException, requests.exceptions.ConnectionError) as e:
+		logging.warning(f'YIAY #{i:03d}: Got the weird {e.__class__.__name__} again, retrying...')
+		
+		stream.seek(0)
+		sleep(5)
+		return request(i, stream)
+
+
+def process(i: int, response: Dict) -> Tuple[str, List]:
+	"""
+	Processes a response from the API.
+	Saves the relevant data in a JSON file.
+	
+	:param i: the video's index in the playlist
+	:param response: response from a completed job
+	:return: index, transcript and word timestamps
+	"""
 	transcript = ''
 	timestamps = []
 	
-	for result in service.recognize(
-			audio=stream,
-			content_type='audio/webm',
-			language_customization_id=environ.get('WATSON_CUSTOMIZATION_ID'),  # costs money
-			timestamps=True,
-			profanity_filter=False
-	).get_result()['results']:
+	for result in response['results']:
 		alternative = result['alternatives'][0]  # only one alternative by default
 		
 		transcript += alternative['transcript']
 		timestamps.extend(alternative['timestamps'])
 	
 	# save to file
-	with open(out, 'w') as file:
+	with open(STT_PATH.format(ind=i), 'w') as file:
 		json.dump({
 			'transcript': transcript,
 			'timestamps': timestamps
@@ -102,11 +126,11 @@ def customize_corpus(filename: str):
 	
 	with open(filename) as file:
 		service.add_corpus(
-			model_id,
-			path.basename(filename),
-			file,
-			allow_overwrite=True
-		)
+				model_id,
+				path.basename(filename),
+				file,
+				allow_overwrite=True
+			)
 	train(model_id)
 
 
