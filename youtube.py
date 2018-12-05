@@ -20,13 +20,14 @@ def video(i: int, only_audio: bool) -> ContextManager[io.BufferedReader]:
 	:param only_audio: True to download only audio, False to download video and audio
 	:return: a context manager which returns the video file and removes it on exit.
 	"""
-	fmt = 'bestaudio[ext=webm]' if only_audio else 'best[ext=mp4]'
+	fmt, ext = ('bestaudio[ext=webm]', 'WEBM') if only_audio else ('best[ext=mp4]', 'MP4')
+	name = f'{i:03d}.{ext}'
 	
-	info(f'Downloading YIAY #{i:03d} as {"WEBM" if only_audio else "MP4"}...')
+	info(f'Downloading YIAY #{i:03d} as {ext}...')
 	with youtube_dl.YoutubeDL({
 		'playlist_items': str(PLAYLIST_LEN + 1 - i),
 		'format': fmt,
-		'outtmpl': fmt,
+		'outtmpl': name,
 		'quiet': True
 		# These don't work
 		# 'keepvideo': False
@@ -34,9 +35,9 @@ def video(i: int, only_audio: bool) -> ContextManager[io.BufferedReader]:
 	}) as yt:
 		yt.download(PLAYLIST_URL)
 	
-	file = open(fmt, 'rb')
+	file = open(name, 'rb')
 	try:
 		yield file
 	finally:
 		file.close()
-		os.remove(fmt)
+		os.remove(name)
