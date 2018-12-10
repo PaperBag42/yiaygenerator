@@ -1,11 +1,8 @@
 from typing import List
 
-import youtube
-
-import logging  # TODO: call basicConfig() on initialization
+from . import youtube
 
 import re
-import collections
 
 CLIPS_PATH = 'expr/clips/'
 LOG_PATH = 'expr/log.csv'

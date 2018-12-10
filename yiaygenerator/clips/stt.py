@@ -1,6 +1,6 @@
 from typing import Tuple, List, Dict
 
-import youtube
+from . import youtube
 
 import requests
 import watson_developer_cloud as watson
