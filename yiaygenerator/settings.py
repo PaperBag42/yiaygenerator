@@ -11,9 +11,11 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+from os import path
+from os.path import dirname
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = dirname(dirname(path.abspath(__file__)))
 
 
 # Quick-start development settings - unsuitable for production
@@ -54,7 +56,7 @@ ROOT_URLCONF = 'yiaygenerator.urls'
 TEMPLATES = [
 	{
 		'BACKEND': 'django.template.backends.django.DjangoTemplates',
-		'DIRS': [os.path.join(BASE_DIR, 'templates')],
+		'DIRS': [path.join(BASE_DIR, 'templates')],
 		
 		'APP_DIRS': True,
 		'OPTIONS': {
@@ -70,6 +72,22 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'yiaygenerator.wsgi.application'
 
+# LOGGING = {
+# 	'version': 1,
+# 	'disable_existing_loggers': False,
+#
+# 	'formatters': {
+# 		'clip': {
+# 			'format': '{levelname}:{name}:YIAY#{se',
+# 			'style': '{',
+# 		},
+# 	},
+# 	'loggers': {
+# 		'': {
+#
+# 		},
+# 	},
+# }
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/

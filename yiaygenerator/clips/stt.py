@@ -7,9 +7,9 @@ import requests
 import watson_developer_cloud as watson
 from watson_developer_cloud.speech_to_text_v1 import CustomWord
 
+import io
 import json
 import time
-import io
 from time import sleep
 from os import path, environ
 
@@ -30,7 +30,7 @@ def speech_to_text(i: int) -> Tuple[str, List]:
 	:param i: the video's index in the playlist
 	:return: a full transcript, and timestamps for each word
 	"""
-	logger.i = i
+	logger.ind = i
 	filename = STT_PATH.format(ind=i)
 	if path.isfile(filename):
 		logger.info(f'Loading transcript from {filename}.')
@@ -39,15 +39,14 @@ def speech_to_text(i: int) -> Tuple[str, List]:
 			return data['transcript'], data['timestamps']
 	else:
 		with youtube.video(i, only_audio=True) as file:
-			return request(i, file)
+			return process(filename, request(file))
 
 
-def request(i: int, stream: io.BufferedReader) -> Tuple[str, List]:
+def request(stream: io.BufferedReader) -> Dict:
 	"""
 	Sends an audio file to the speech-to-text API,
-	gets the results and saves them in a JSON file.
+	and gets the results.
 	
-	:param i: the video's index in the playlist
 	:param stream: audio file binary data
 	:return:
 		The audio's complete transcript,
@@ -55,30 +54,32 @@ def request(i: int, stream: io.BufferedReader) -> Tuple[str, List]:
 	"""
 	logger.info(f'Making an API request...')
 	try:
-		return process(i, service.recognize(
+		return service.recognize(
 				audio=stream,
 				content_type='audio/webm',
 				language_customization_id=environ.get('WATSON_CUSTOMIZATION_ID'),  # costs money
 				timestamps=True,
 				profanity_filter=False
-			).get_result())
+			).get_result()
 	
 	except (watson.WatsonApiException, requests.exceptions.ConnectionError) as e:
 		logger.warning(f'Got the weird {e.__class__.__name__} again, retrying...')
 		
 		stream.seek(0)
 		sleep(5)
-		return request(i, stream)
+		return request(stream)
 
 
-def process(i: int, response: Dict) -> Tuple[str, List]:
+def process(filename: str, response: Dict) -> Tuple[str, List]:
 	"""
-	Processes a response from the API.
-	Saves the relevant data in a JSON file.
+	Collects the relevant data from an API response,
+	and saves it in a JSON file.
 	
-	:param i: the video's index in the playlist
-	:param response: response from a completed job
-	:return: index, transcript and word timestamps
+	:param filename: path to a file to save the data in
+	:param response: the response from an API request for an audio file
+	:return:
+		The audio's complete transcript,
+		and timestamps for each word.
 	"""
 	transcript = ''
 	timestamps = []
@@ -90,7 +91,7 @@ def process(i: int, response: Dict) -> Tuple[str, List]:
 		timestamps.extend(alternative['timestamps'])
 	
 	# save to file
-	with open(STT_PATH.format(ind=i), 'w') as file:
+	with open(filename, 'w') as file:
 		json.dump({
 			'transcript': transcript,
 			'timestamps': timestamps
