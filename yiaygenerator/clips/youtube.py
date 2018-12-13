@@ -1,3 +1,5 @@
+"""Downloads YIAY videos from Youtube."""
+
 from typing import ContextManager
 
 from ._logging import logger

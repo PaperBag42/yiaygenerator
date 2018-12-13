@@ -1,3 +1,5 @@
+"""Module-level logging configuration."""
+
 from __future__ import annotations
 from typing import Dict
 
@@ -11,4 +13,5 @@ class _IndexAdapter(logging.LoggerAdapter):
 		return f'YIAY#{self.ind:03d}:{msg}', kwargs
 
 
-logger = _IndexAdapter(logging.getLogger('yiaygenerator.clips'), {})
+logger: logging.Logger = _IndexAdapter(logging.getLogger('yiaygenerator.clips'), {})
+"""A custom module-level logger that logs the index of the relevant YIAY video as well."""

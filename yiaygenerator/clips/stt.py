@@ -1,3 +1,8 @@
+"""
+Fetches text-to-speech transcripts of videos
+from the IBM Watson developer cloud API.
+"""
+
 from typing import Tuple, List, Dict
 
 from . import youtube
