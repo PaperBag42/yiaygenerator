@@ -17,8 +17,8 @@ STT_PATH = 'expr/stt/{ind:03d}.json'
 MODEL_PATH = 'stt_custom/words.json'
 
 service = watson.SpeechToTextV1(
-	username=environ['WATSON_USERNAME'],
-	password=environ['WATSON_PASSWORD']
+		username=environ['WATSON_USERNAME'],
+		password=environ['WATSON_PASSWORD']
 )
 
 
@@ -39,7 +39,7 @@ def speech_to_text(i: int) -> Tuple[str, List]:
 			return data['transcript'], data['timestamps']
 	else:
 		with youtube.video(i, only_audio=True) as file:
-			return process(filename, request(file))
+			return _process(filename, request(file))
 
 
 def request(stream: io.BufferedReader) -> Dict:
@@ -70,7 +70,7 @@ def request(stream: io.BufferedReader) -> Dict:
 		return request(stream)
 
 
-def process(filename: str, response: Dict) -> Tuple[str, List]:
+def _process(filename: str, response: Dict) -> Tuple[str, List]:
 	"""
 	Collects the relevant data from an API response,
 	and saves it in a JSON file.
@@ -81,21 +81,22 @@ def process(filename: str, response: Dict) -> Tuple[str, List]:
 		The audio's complete transcript,
 		and timestamps for each word.
 	"""
-	transcript = ''
+	transcripts = []
 	timestamps = []
 	
 	for result in response['results']:
 		alternative = result['alternatives'][0]  # only one alternative by default
 		
-		transcript += alternative['transcript']
+		transcripts.append(alternative['transcript'])
 		timestamps.extend(alternative['timestamps'])
 	
+	transcript = ''.join(transcripts)
 	# save to file
 	with open(filename, 'w') as file:
 		json.dump({
-			'transcript': transcript,
-			'timestamps': timestamps
-		}, file, indent='\t')
+				'transcript': transcript,
+				'timestamps': timestamps
+			}, file, indent='\t')
 	
 	return transcript, timestamps
 
@@ -109,9 +110,9 @@ def create_model() -> None:
 	NOTE: should only be used once.
 	"""
 	print(service.create_language_model(
-		'Jack custom model',
-		'en-US_BroadbandModel'
-	).get_result()['customization_id'])
+			'Jack custom model',
+			'en-US_BroadbandModel'
+		).get_result()['customization_id'])
 
 
 def customize_words(*words: CustomWord) -> None:

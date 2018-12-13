@@ -1,13 +1,14 @@
+from __future__ import annotations
 from typing import Dict
 
 import logging
 
 
-class IndexAdapter(logging.LoggerAdapter):
+class _IndexAdapter(logging.LoggerAdapter):
 	ind: int
 	
-	def process(self, msg: str, kwargs: Dict):
+	def process(self: _IndexAdapter, msg: str, kwargs: Dict):
 		return f'YIAY#{self.ind:03d}:{msg}', kwargs
 
 
-logger = IndexAdapter(logging.getLogger('yiaygenerator.clips'), {})
+logger = _IndexAdapter(logging.getLogger('yiaygenerator.clips'), {})
