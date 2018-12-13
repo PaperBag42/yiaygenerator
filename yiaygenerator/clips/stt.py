@@ -3,7 +3,7 @@ Fetches text-to-speech transcripts of videos
 from the IBM Watson developer cloud API.
 """
 
-from typing import Tuple, List, Dict
+from typing import Tuple, List, Dict, BinaryIO
 
 from . import youtube
 from ._logging import logger
@@ -12,7 +12,6 @@ import requests
 import watson_developer_cloud as watson
 from watson_developer_cloud.speech_to_text_v1 import CustomWord
 
-import io
 import json
 import time
 from time import sleep
@@ -43,11 +42,12 @@ def speech_to_text(i: int) -> Tuple[str, List]:
 			data = json.load(file)
 			return data['transcript'], data['timestamps']
 	else:
-		with youtube.video(i, only_audio=True) as file:
-			return _process(filename, request(file))
+		with youtube.video(i, only_audio=True) as video:
+			with open(video, 'rb') as file:
+				return _process(filename, request(file))
 
 
-def request(stream: io.BufferedReader) -> Dict:
+def request(stream: BinaryIO) -> Dict:
 	"""
 	Sends an audio file to the speech-to-text API,
 	and gets the results.
