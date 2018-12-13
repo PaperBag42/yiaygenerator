@@ -1,11 +1,12 @@
 from typing import ContextManager
 
+from ._logging import logger
+
 import youtube_dl
 
 import contextlib
 import os
 import io
-from logging import info
 
 PLAYLIST_URL = ('https://www.youtube.com/playlist?list=PLiWL8lZPZ2_k1JH6urJ_H7HzH9etwmn7M',)
 
@@ -22,7 +23,7 @@ def video(i: int, only_audio: bool) -> ContextManager[io.BufferedReader]:
 	"""
 	fmt = 'bestaudio[ext=webm]' if only_audio else 'best[ext=mp4]'
 	
-	info(f'Downloading YIAY #{i:03d} as {"WEBM" if only_audio else "MP4"}...')
+	logger.info(f'Downloading {"audio" if only_audio else "video"}...')
 	with youtube_dl.YoutubeDL({
 			'playlistreverse': True,
 			'playlist_items': str(i),

@@ -1,6 +1,7 @@
 from typing import Tuple, List, Dict
 
 from . import youtube
+from ._logging import logger
 
 import requests
 import watson_developer_cloud as watson
@@ -11,9 +12,6 @@ import time
 import io
 from time import sleep
 from os import path, environ
-
-import logging
-from logging import info
 
 STT_PATH = 'expr/stt/{ind:03d}.json'
 MODEL_PATH = 'stt_custom/words.json'
@@ -32,9 +30,10 @@ def speech_to_text(i: int) -> Tuple[str, List]:
 	:param i: the video's index in the playlist
 	:return: a full transcript, and timestamps for each word
 	"""
+	logger.i = i
 	filename = STT_PATH.format(ind=i)
 	if path.isfile(filename):
-		info(f'Loading transcript for YIAY #{i:03d} from {filename}.')
+		logger.info(f'Loading transcript from {filename}.')
 		with open(filename) as file:
 			data = json.load(file)
 			return data['transcript'], data['timestamps']
@@ -54,7 +53,7 @@ def request(i: int, stream: io.BufferedReader) -> Tuple[str, List]:
 		The audio's complete transcript,
 		and timestamps for each word.
 	"""
-	info(f'Making an API request for YIAY #{i:03d}...')
+	logger.info(f'Making an API request...')
 	try:
 		return process(i, service.recognize(
 				audio=stream,
@@ -65,7 +64,7 @@ def request(i: int, stream: io.BufferedReader) -> Tuple[str, List]:
 			).get_result())
 	
 	except (watson.WatsonApiException, requests.exceptions.ConnectionError) as e:
-		logging.warning(f'YIAY #{i:03d}: Got the weird {e.__class__.__name__} again, retrying...')
+		logger.warning(f'Got the weird {e.__class__.__name__} again, retrying...')
 		
 		stream.seek(0)
 		sleep(5)
