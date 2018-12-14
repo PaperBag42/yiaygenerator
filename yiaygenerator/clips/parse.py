@@ -4,6 +4,8 @@ from . import youtube, stt
 from ._logging import logger
 
 import re
+import os
+from json import dump, load
 
 CLIPS_PATH = 'expr/clips/'
 LOG_PATH = 'expr/log.csv'
@@ -62,6 +64,20 @@ def test(inds: Iterable[int]) -> None:
 			
 			logger.info(f'Group %{name}: {100 * len(part) / len(text):.2f}% of video.')
 	logger.info(f'Matched {matched}/{total} videos.')
+
+
+def _reset():
+	"""Deletes the clips and resets the 'parsed' attribute in the JSON files."""
+	if input('ARE YOU SURE ABOUT THAT [Y/N]') != 'N':  # just making sure
+		for *_, names in os.walk(CLIPS_PATH):
+			for name in names:
+				os.remove(name)
+		
+		for name in os.listdir(stt.JSON_PATH):
+			with open(name, 'r+') as file:
+				data = load(file)
+				file.seek(0)
+				dump({'parsed': False, **data}, file)
 
 
 '''

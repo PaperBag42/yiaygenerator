@@ -18,8 +18,8 @@ import time
 from time import sleep
 from os import path, environ
 
-JSON_PATH = 'expr/stt/{ind:03d}.json'
-MODEL_PATH = 'stt_custom/{}'
+JSON_PATH = 'expr/stt/'
+MODEL_PATH = 'stt_custom/'
 
 _service = watson.SpeechToTextV1(
 		username=environ['WATSON_USERNAME'],
@@ -38,7 +38,7 @@ def speech_to_text(i: int) -> Tuple[bool, str, List]:
 		a full transcript, and timestamps for each word.
 	"""
 	logger.ind = i
-	filename = JSON_PATH.format(ind=i)
+	filename = f'{JSON_PATH}/{i:03d}.json'
 	if path.isfile(filename):
 		logger.info(f'Loading transcript from {filename}.')
 		with open(filename) as file:
@@ -127,7 +127,7 @@ def _model_setup() -> str:
 			CustomWord('answers', ['cancers']),
 		])
 	
-	filename = MODEL_PATH.format('outro.txt')
+	filename = f'{MODEL_PATH}/outro.txt'
 	with open(filename) as file:
 		_service.add_corpus(model_id, path.basename(filename), file)
 	
@@ -135,7 +135,7 @@ def _model_setup() -> str:
 		time.sleep(5)
 	_service.train_language_model(model_id)
 	
-	with open(MODEL_PATH.format('words.json'), 'w') as file:
+	with open(f'{MODEL_PATH}/words.json', 'w') as file:
 		dump(_service.list_words(model_id).get_result(), file, indent='\t')
 	
 	return model_id
