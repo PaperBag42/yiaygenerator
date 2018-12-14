@@ -23,13 +23,13 @@ def generate(i: int) -> None:
 
 
 _pattern = re.compile(
-	r'(?P<INTRO>.*?asked you )?'  # ok
-	r'(?P<QUESTION>.*?)'  # ok
-	r'(?P<START>(here .*?)?answers )?'  # will probably break a lot (he sometimes says "let's go" or other random stuff)
-	r'(?P<CONTENT>.*)'  # ok
+	r'(?P<intro>.*?asked you )?'  # ok
+	r'(?P<question>.*?)'  # ok
+	r'(?P<start>(here .*?)?answers )?'  # will probably break a lot (he sometimes says "let's go" or other random stuff)
+	r'(?P<content>.*)'  # ok
 	# TODO: sponsor
-	r'(?P<OUTRO>(leave|let) .*?YIAY )'  # ok?
-	r'(?P<END>.*)'  # ok
+	r'(?P<outro>(leave|let) .*?YIAY )'  # ok?
+	r'(?P<end>.*)'  # ok
 )
 
 
@@ -37,7 +37,7 @@ def parse(text: str, timestamps: List[List]):
 	match = _pattern.match(text)
 
 
-def test(inds: Iterable[int]) -> None:
+def _test(inds: Iterable[int]) -> None:
 	"""
 	Tests the RegEx pattern against a range of YIAY videos.
 	
