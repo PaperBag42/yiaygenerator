@@ -13,12 +13,13 @@ import watson_developer_cloud as watson
 from watson_developer_cloud.speech_to_text_v1 import CustomWord
 
 import json
+from json import dump
 import time
 from time import sleep
 from os import path, environ
 
 JSON_PATH = 'expr/stt/{ind:03d}.json'
-MODEL_PATH = 'stt_custom/words.json'
+MODEL_PATH = 'stt_custom/{}'
 
 service = watson.SpeechToTextV1(
 		username=environ['WATSON_USERNAME'],
@@ -100,7 +101,7 @@ def _process(filename: str, response: Dict) -> Tuple[str, List]:
 	transcript = ''.join(transcripts)
 	# save to file
 	with open(filename, 'w') as file:
-		json.dump({
+		dump({
 				'parsed': False,
 				'transcript': transcript,
 				'timestamps': timestamps
@@ -109,44 +110,32 @@ def _process(filename: str, response: Dict) -> Tuple[str, List]:
 	return transcript, timestamps
 
 
-# -- Customization --
-
-def create_model() -> None:
+def _model_setup() -> str:
 	"""
-	Creates a language model for the speech-to-text service,
-	and prints its ID.
+	Sets up a language model for the speech-to-text service,
+	and returns its ID.
 	NOTE: should only be used once.
 	"""
-	print(service.create_language_model(
+	model_id = service.create_language_model(
 			'Jack custom model',
 			'en-US_BroadbandModel'
-		).get_result()['customization_id'])
-
-
-def customize_words(*words: CustomWord) -> None:
-	model_id = environ['WATSON_CUSTOMIZATION_ID']
+		).get_result()['customization_id']
 	
-	service.add_words(model_id, list(words))
-	train(model_id)
-
-
-def customize_corpus(filename: str):
-	model_id = environ['WATSON_CUSTOMIZATION_ID']
+	service.add_words(model_id, [
+			CustomWord('finna', ['Finnan', 'Finno']),
+			CustomWord('YIAY', ['yeah I', 'yeah I.']),
+			CustomWord('answers', ['cancers']),
+		])
 	
+	filename = MODEL_PATH.format('outro.txt')
 	with open(filename) as file:
-		service.add_corpus(
-				model_id,
-				path.basename(filename),
-				file,
-				allow_overwrite=True
-			)
-	train(model_id)
-
-
-def train(model_id: str) -> None:
+		service.add_corpus(model_id, path.basename(filename), file)
+	
 	while service.get_language_model(model_id).get_result()['status'] != 'ready':
 		time.sleep(5)
 	service.train_language_model(model_id)
 	
-	with open(MODEL_PATH, 'w') as f:
-		json.dump(service.list_words(model_id).get_result(), f, indent='\t')
+	with open(MODEL_PATH.format('words.json'), 'w') as file:
+		dump(service.list_words(model_id).get_result(), file, indent='\t')
+	
+	return model_id
