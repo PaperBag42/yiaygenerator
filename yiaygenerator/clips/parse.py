@@ -47,7 +47,7 @@ def test(inds: Iterable[int]) -> None:
 		logger.ind = i
 		total += 1
 		
-		text = stt.speech_to_text(i)[0]
+		text = stt.speech_to_text(i)[1]
 		match = _pattern.match(text)
 		
 		if match is None:

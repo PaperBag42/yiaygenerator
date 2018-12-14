@@ -17,7 +17,7 @@ import time
 from time import sleep
 from os import path, environ
 
-STT_PATH = 'expr/stt/{ind:03d}.json'
+JSON_PATH = 'expr/stt/{ind:03d}.json'
 MODEL_PATH = 'stt_custom/words.json'
 
 service = watson.SpeechToTextV1(
@@ -26,25 +26,27 @@ service = watson.SpeechToTextV1(
 )
 
 
-def speech_to_text(i: int) -> Tuple[str, List]:
+def speech_to_text(i: int) -> Tuple[bool, str, List]:
 	"""
 	Loads the speech-to-text transcript for a YIAY video.
 	Makes an API request if a transcript was not found.
 	
 	:param i: the video's index in the playlist
-	:return: a full transcript, and timestamps for each word
+	:return:
+		A boolean indicating whether the video was already parsed,
+		a full transcript, and timestamps for each word.
 	"""
 	logger.ind = i
-	filename = STT_PATH.format(ind=i)
+	filename = JSON_PATH.format(ind=i)
 	if path.isfile(filename):
 		logger.info(f'Loading transcript from {filename}.')
 		with open(filename) as file:
 			data = json.load(file)
-			return data['transcript'], data['timestamps']
+			return data['parsed'], data['transcript'], data['timestamps']
 	else:
 		with youtube.video(i, only_audio=True) as video:
 			with open(video, 'rb') as file:
-				return _process(filename, request(file))
+				return (False, *_process(filename, request(file)))
 
 
 def request(stream: BinaryIO) -> Dict:
@@ -99,6 +101,7 @@ def _process(filename: str, response: Dict) -> Tuple[str, List]:
 	# save to file
 	with open(filename, 'w') as file:
 		json.dump({
+				'parsed': False,
 				'transcript': transcript,
 				'timestamps': timestamps
 			}, file, indent='\t')
