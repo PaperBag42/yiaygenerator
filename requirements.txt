@@ -1,5 +1,6 @@
 django
 watson_developer_cloud
+moviepy
 
 # youtube_dl fork that supports reverse indexing
 # TODO: check if it was merged already

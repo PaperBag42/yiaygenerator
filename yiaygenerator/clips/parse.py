@@ -1,6 +1,7 @@
-from typing import List
+from typing import List, Iterable
 
-from . import youtube
+from . import youtube, stt
+from ._logging import logger
 
 import re
 
@@ -19,21 +20,49 @@ def generate(i: int) -> None:
 	pass
 
 
-pattern = re.compile(
-	r'(?P<intro>.*?asked you )?'  # ok
-	r'(?P<question>.*?)'  # ok
-	r'(?P<start>(here .*?)?answers )?'  # will probably break a lot (he sometimes says "let's go" or other random stuff)
-	r'(?P<content>.*)'  # ok
+_pattern = re.compile(
+	r'(?P<INTRO>.*?asked you )?'  # ok
+	r'(?P<QUESTION>.*?)'  # ok
+	r'(?P<START>(here .*?)?answers )?'  # will probably break a lot (he sometimes says "let's go" or other random stuff)
+	r'(?P<CONTENT>.*)'  # ok
 	# TODO: sponsor
-	r'(?P<outro>(leave|let) .*?YIAY )'  # ok?
-	r'(?P<end>.*)'  # ok
+	r'(?P<OUTRO>(leave|let) .*?YIAY )'  # ok?
+	r'(?P<END>.*)'  # ok
 )
 
 
 def parse(text: str, timestamps: List[List]):
-	# TODO: remove emotions
-	match = pattern.match(text)
+	match = _pattern.match(text)
+
+
+def test(inds: Iterable[int]) -> None:
+	"""
+	Tests the RegEx pattern against a range of YIAY videos.
 	
+	:param inds: indexes of videos to test
+	"""
+	matched = 0
+	total = 0
+	for i in inds:
+		logger.ind = i
+		total += 1
+		
+		text = stt.speech_to_text(i)[0]
+		match = _pattern.match(text)
+		
+		if match is None:
+			logger.error('RegEx match failed.')
+			continue
+		
+		matched += 1
+		for name, part in match.groupdict().items():
+			if part is None:
+				logger.warning(f'Group %{name} was not captured.')
+				continue
+			
+			logger.info(f'Group %{name}: {100 * len(part) / len(text):.2f}% of video.')
+	logger.info(f'Matched {matched}/{total} videos.')
+
 
 '''
 try:
