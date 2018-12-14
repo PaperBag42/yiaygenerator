@@ -3,8 +3,11 @@ from typing import List, Iterable
 from . import youtube, stt
 from ._logging import logger
 
+import moviepy.video.io.VideoFileClip
+
 import re
 import os
+import collections
 from json import dump, load
 
 CLIPS_PATH = 'expr/clips/'
@@ -35,6 +38,23 @@ _pattern = re.compile(
 
 def parse(text: str, timestamps: List[List]):
 	match = _pattern.match(text)
+
+
+def write(i: int, timestamps: List[List]) -> None:
+	count = collections.Counter()
+	
+	with youtube.video(i, only_audio=False) as video:
+		clip = moviepy.video.io.VideoFileClip.VideoFileClip(video)
+		
+		for word, start, end in timestamps:
+			dirname = f'{CLIPS_PATH}/{word}/'
+			if not os.path.isdir(dir):
+				os.mkdir(dirname)
+				
+			clip.subclip(start, end).write_videofile(
+					f'{dirname}/{i:03d}-{count[word]:03d}.mp4',
+					verbose=False, loading_bar=False
+				)
 
 
 def _test(inds: Iterable[int]) -> None:
