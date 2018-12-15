@@ -1,6 +1,7 @@
 from typing import List, Iterable
 
 from . import youtube, stt
+from .stt import JSON_PATH
 from ._logging import logger
 
 import moviepy.video.io.VideoFileClip
@@ -12,8 +13,6 @@ from json import dump, load
 
 CLIPS_PATH = 'expr/clips/'
 LOG_PATH = 'expr/log.csv'
-
-WORD, START, END = 0, 1, 2
 
 
 def generate(i: int) -> None:
@@ -44,17 +43,25 @@ def write(i: int, timestamps: List[List]) -> None:
 	count = collections.Counter()
 	
 	with youtube.video(i, only_audio=False) as video:
-		clip = moviepy.video.io.VideoFileClip.VideoFileClip(video)
-		
-		for word, start, end in timestamps:
-			dirname = f'{CLIPS_PATH}/{word}/'
-			if not os.path.isdir(dir):
-				os.mkdir(dirname)
+		with moviepy.video.io.VideoFileClip.VideoFileClip(video) as clip:
+			
+			logger.info(f'Writing {len(timestamps)} clips...')
+			for word, start, end in timestamps:
+				dirname = f'{CLIPS_PATH}/{word.lower()}/'
+				if not os.path.isdir(dirname):
+					os.mkdir(dirname)
 				
-			clip.subclip(start, end).write_videofile(
-					f'{dirname}/{i:03d}-{count[word]:03d}.mp4',
-					verbose=False, loading_bar=False
-				)
+				clip.subclip(start, end).write_videofile(
+						f'{dirname}/{i:03d}-{count[word]:03d}.mp4',
+						verbose=False, progress_bar=False
+					)
+				count[word] += 1
+		
+	with open(f'{JSON_PATH}/{i:03d}.json', 'r+') as file:
+		data = load(file)
+		file.seek(0)
+		file.truncate()
+		dump({**data, 'parsed': True}, file)
 
 
 def _test(inds: Iterable[int]) -> None:
@@ -93,11 +100,12 @@ def _reset():
 			for name in names:
 				os.remove(name)
 		
-		for name in os.listdir(stt.JSON_PATH):
+		for name in os.listdir(JSON_PATH):
 			with open(name, 'r+') as file:
 				data = load(file)
 				file.seek(0)
-				dump({'parsed': False, **data}, file)
+				file.truncate()
+				dump({**data, 'parsed': False}, file)
 
 
 '''
