@@ -17,7 +17,7 @@ def video(i: int, only_audio: bool) -> ContextManager[str]:
 	"""
 	Downloads a video from YouTube.
 
-	:param i: the video's index in the playlist (counting from 0)
+	:param i: the video's index in the playlist
 	:param only_audio: True to download only audio, False to download video and audio
 	:return: a context manager which returns the video file's path and removes it on exit.
 	:raise IndexError: if i surpasses the playlist's bounds
