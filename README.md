@@ -6,15 +6,15 @@ before finishing the project.
 
 ## The Plan
 1. You enter the website.
-2. You type in a question and a tweeter hashtag.
+2. You type in a question and a twitter hashtag.
 3. You press enter.
 4. Forehead shaped loading bar.
-5. You get a video of Jack reading the top twitter comments.
+5. You get a video of Jack reading the top Twitter comments.
 6. I get first place on the next Jack's Challenge.
 
 ### TODO
 - [x] Youtube downloading
-- [ ] Speech to Text
+- [x] Speech to Text
 - [ ] Video editing
 - [ ] Twitter
 - [ ] Frontend
@@ -23,6 +23,7 @@ before finishing the project.
 - Django
 - Youtube-DL
 - Watson Developer Cloud
+- Moviepy
 
 ### Q&A
 **Why do you love Jack so much?**
@@ -35,7 +36,7 @@ because of this guy. But you know what I do love? Coding, of course :3
 
 I actually went to a meetup of theirs a while ago
 and they gave us an explanation about how to use their API,
-as well as some free pizza and promo codes. So yeah, I'm sold.
+as well as some free pizza and promo codes. So yeah, I'm basically sponsored.
 
 **Are you really going to finish this project?**
 
