@@ -1,5 +1,6 @@
 from typing import List, Iterable
 
+from .. import homophones
 from . import youtube, stt
 from .stt import JSON_PATH
 from ._logging import logger
@@ -47,7 +48,10 @@ def write(i: int, timestamps: List[List]) -> None:
 			
 			logger.info(f'Writing {len(timestamps)} clips...')
 			for word, start, end in timestamps:
-				dirname = f'{CLIPS_PATH}/{word.lower()}/'
+				dirname = (
+					f'{CLIPS_PATH}/'
+					f'{word if word.startswith("%") else homophones.get_homophone(word)}/'
+				)
 				if not os.path.isdir(dirname):
 					os.mkdir(dirname)
 				
