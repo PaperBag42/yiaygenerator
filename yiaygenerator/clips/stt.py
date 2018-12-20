@@ -13,17 +13,15 @@ import watson_developer_cloud as watson
 from watson_developer_cloud.speech_to_text_v1 import CustomWord
 
 import json
-from json import dump
 import time
-from time import sleep
 from os import path, environ
 
 JSON_PATH = 'expr/stt/'
 MODEL_PATH = 'stt_custom/'
 
 _service = watson.SpeechToTextV1(
-		username=environ['WATSON_USERNAME'],
-		password=environ['WATSON_PASSWORD']
+	username=environ['WATSON_USERNAME'],
+	password=environ['WATSON_PASSWORD']
 )
 
 
@@ -63,18 +61,18 @@ def _request(stream: BinaryIO) -> Dict:
 	logger.info(f'Making an API request...')
 	try:
 		return _service.recognize(
-				audio=stream,
-				content_type='audio/webm',
-				language_customization_id=environ.get('WATSON_CUSTOMIZATION_ID'),  # costs money
-				timestamps=True,
-				profanity_filter=False
-			).get_result()
+			audio=stream,
+			content_type='audio/webm',
+			language_customization_id=environ.get('WATSON_CUSTOMIZATION_ID'),  # costs money
+			timestamps=True,
+			profanity_filter=False
+		).get_result()
 	
 	except (watson.WatsonApiException, requests.exceptions.ConnectionError) as e:
 		logger.warning(f'Got the weird {e.__class__.__name__} again, retrying...')
 		
 		stream.seek(0)
-		sleep(5)
+		time.sleep(5)
 		return _request(stream)
 
 
@@ -101,11 +99,11 @@ def _process(filename: str, response: Dict) -> Tuple[str, List]:
 	transcript = ''.join(transcripts)
 	# save to file
 	with open(filename, 'w') as file:
-		dump({
-				'parsed': False,
-				'transcript': transcript,
-				'timestamps': timestamps
-			}, file, indent='\t')
+		json.dump({
+			'parsed': False,
+			'transcript': transcript,
+			'timestamps': timestamps
+		}, file, indent='\t')
 	
 	return transcript, timestamps
 
@@ -117,15 +115,15 @@ def _model_setup() -> str:
 	NOTE: should only be used once.
 	"""
 	model_id = _service.create_language_model(
-			'Jack custom model',
-			'en-US_BroadbandModel'
-		).get_result()['customization_id']
+		'Jack custom model',
+		'en-US_BroadbandModel'
+	).get_result()['customization_id']
 	
 	_service.add_words(model_id, [
-			CustomWord('finna', ['Finnan', 'Finno']),
-			CustomWord('YIAY', ['yeah I', 'yeah I.']),
-			CustomWord('answers', ['cancers']),
-		])
+		CustomWord('finna', ['Finnan', 'Finno']),
+		CustomWord('YIAY', ['yeah I', 'yeah I.']),
+		CustomWord('answers', ['cancers']),
+	])
 	
 	filename = f'{MODEL_PATH}/outro.txt'
 	with open(filename) as file:
@@ -136,6 +134,6 @@ def _model_setup() -> str:
 	_service.train_language_model(model_id)
 	
 	with open(f'{MODEL_PATH}/words.json', 'w') as file:
-		dump(_service.list_words(model_id).get_result(), file, indent='\t')
+		json.dump(_service.list_words(model_id).get_result(), file, indent='\t')
 	
 	return model_id

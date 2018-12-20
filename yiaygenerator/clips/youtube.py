@@ -26,12 +26,12 @@ def video(i: int, only_audio: bool) -> ContextManager[str]:
 	
 	logger.info(f'Downloading {"audio" if only_audio else "video"}...')
 	with youtube_dl.YoutubeDL({
-			'playlistreverse': True,
-			'playlist_items': str(i),
-			'format': fmt,
-			'outtmpl': fmt,
-			'quiet': True,
-		}) as yt:
+		'playlistreverse': True,
+		'playlist_items': str(i),
+		'format': fmt,
+		'outtmpl': fmt,
+		'quiet': True,
+	}) as yt:
 		yt.download(PLAYLIST_URL)
 	
 	if not os.path.isfile(fmt):

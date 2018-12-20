@@ -9,8 +9,8 @@ import moviepy.video.io.VideoFileClip
 
 import re
 import os
+import json
 import collections
-from json import dump, load
 
 CLIPS_PATH = 'expr/clips/'
 LOG_PATH = 'expr/log.csv'
@@ -56,16 +56,16 @@ def write(i: int, timestamps: List[List]) -> None:
 					os.mkdir(dirname)
 				
 				clip.subclip(start, end).write_videofile(
-						f'{dirname}/{i:03d}-{count[word]:03d}.mp4',
-						verbose=False, progress_bar=False
-					)
+					f'{dirname}/{i:03d}-{count[word]:03d}.mp4',
+					verbose=False, progress_bar=False
+				)
 				count[word] += 1
 		
 	with open(f'{JSON_PATH}/{i:03d}.json', 'r+') as file:
-		data = load(file)
+		data = json.load(file)
 		file.seek(0)
 		file.truncate()
-		dump({**data, 'parsed': True}, file)
+		json.dump({**data, 'parsed': True}, file)
 
 
 def _test(inds: Iterable[int]) -> None:
@@ -106,10 +106,10 @@ def _reset():
 		
 		for name in os.listdir(JSON_PATH):
 			with open(name, 'r+') as file:
-				data = load(file)
+				data = json.load(file)
 				file.seek(0)
 				file.truncate()
-				dump({**data, 'parsed': False}, file)
+				json.dump({**data, 'parsed': False}, file)
 
 
 '''
