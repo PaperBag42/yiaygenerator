@@ -3,7 +3,7 @@ Fetches text-to-speech transcripts of videos
 from the IBM Watson developer cloud API.
 """
 
-from typing import Tuple, List, Dict, BinaryIO
+from typing import Tuple, List, Dict, BinaryIO, NamedTuple
 
 from . import youtube
 from ._logging import logger
@@ -25,7 +25,14 @@ _service = watson.SpeechToTextV1(
 )
 
 
-def speech_to_text(i: int) -> Tuple[bool, str, List]:
+class Timestamp(NamedTuple):
+	"""Word timestamp as received from the API."""
+	word: str
+	start: float
+	end: float
+
+
+def speech_to_text(i: int) -> Tuple[bool, str, List[Timestamp]]:
 	"""
 	Loads the speech-to-text transcript for a YIAY video.
 	Makes an API request if a transcript was not found.
@@ -76,7 +83,7 @@ def _request(stream: BinaryIO) -> Dict:
 		return _request(stream)
 
 
-def _process(filename: str, response: Dict) -> Tuple[str, List]:
+def _process(filename: str, response: Dict) -> Tuple[str, List[Timestamp]]:
 	"""
 	Collects the relevant data from an API response,
 	and saves it in a JSON file.

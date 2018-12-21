@@ -2,7 +2,7 @@ from typing import List, Iterable
 
 from .. import homophones
 from . import youtube, stt
-from .stt import JSON_PATH
+from .stt import Timestamp, JSON_PATH
 from ._logging import logger
 
 import moviepy.video.io.VideoFileClip
@@ -36,11 +36,11 @@ _pattern = re.compile(
 )
 
 
-def parse(text: str, timestamps: List[List]):
+def _parse(text: str, timestamps: List[Timestamp]):
 	match = _pattern.match(text)
 
 
-def write(i: int, timestamps: List[List]) -> None:
+def _write(i: int, timestamps: List[Timestamp]) -> None:
 	count = collections.Counter()
 	
 	with youtube.video(i, only_audio=False) as video:
@@ -111,24 +111,3 @@ def _reset():
 				file.truncate()
 				json.dump({**data, 'parsed': False}, file)
 
-
-'''
-try:
-	len(os.listdir)
-except FileNotFoundError:
-	0
-
-defaultdict
-'''
-
-
-def main():
-	"""
-	Generates all clips to be used as parts of the final video.
-	"""
-	for i in range(youtube.PLAYLIST_LEN):
-		generate(i)
-
-
-if __name__ == '__main__':
-	main()
