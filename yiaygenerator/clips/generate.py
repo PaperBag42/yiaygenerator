@@ -1,3 +1,5 @@
+"""Generates video clips using the speech-to-text results."""
+
 from typing import List, Iterable
 
 from .. import homophones
@@ -37,7 +39,16 @@ _pattern = re.compile(
 )
 
 
-def _parse(text: str, timestamps: List[Timestamp]) -> bool:
+def _group(text: str, timestamps: List[Timestamp]) -> bool:
+	"""
+	Tries to detect parts of the video that are typical
+	for a YIAY video.
+	Groups the detected parts into single clips in the timestamp list.
+	
+	:param text: the video's full transcript to be matched against a RegEx pattern
+	:param timestamps: the timestamps list to be modified
+	:return: true if the match succeeded
+	"""
 	match = _pattern.fullmatch(text)
 	
 	if match is None:
@@ -64,6 +75,12 @@ def _parse(text: str, timestamps: List[Timestamp]) -> bool:
 
 
 def _write(i: int, timestamps: List[Timestamp]) -> None:
+	"""
+	Writes clips from a YIAY video using a list of timestamps.
+	
+	:param i: the video's index
+	:param timestamps: the timestamps list
+	"""
 	count = collections.Counter()
 	
 	with youtube.video(i, only_audio=False) as video:
