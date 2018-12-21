@@ -38,7 +38,7 @@ def speech_to_text(i: int) -> Tuple[bool, str, List]:
 	logger.ind = i
 	filename = f'{JSON_PATH}/{i:03d}.json'
 	if path.isfile(filename):
-		logger.info(f'Loading transcript from {filename}.')
+		logger.debug(f'Loading transcript from {filename}.')
 		with open(filename) as file:
 			data = json.load(file)
 			return data['parsed'], data['transcript'], data['timestamps']

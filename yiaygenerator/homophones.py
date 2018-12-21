@@ -40,4 +40,3 @@ def get_homophone(word: str) -> str:
 	"""
 	word = _non_letter.sub('', word.lower())
 	return _homophones.get(word, word)
-
