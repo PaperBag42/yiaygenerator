@@ -26,18 +26,41 @@ def generate(i: int) -> None:
 
 
 _pattern = re.compile(
-	r'(?P<intro>.*?asked you )?'  # ok
-	r'(?P<question>.*?)'  # ok
-	r'(?P<start>(here .*?)?answers )?'  # will probably break a lot (he sometimes says "let's go" or other random stuff)
-	r'(?P<content>.*)'  # ok
+	r'(?P<INTRO>.*? asked you )?'
+	r'.*? '
+	r'(?P<START>(here .*? )?answers )?'  # will probably break a lot (he sometimes says "let's go" or other random stuff)
+	r'.* '
 	# TODO: sponsor
-	r'(?P<outro>(leave|let) .*?YIAY )'  # ok?
-	r'(?P<end>.*)'  # ok
+	r'(?P<OUTRO>(leave|let) .*? YIAY )'
+	# r'(?P<END>.*? episode )'
+	r'.* '
 )
 
 
-def _parse(text: str, timestamps: List[Timestamp]):
-	match = _pattern.match(text)
+def _parse(text: str, timestamps: List[Timestamp]) -> bool:
+	match = _pattern.fullmatch(text)
+	
+	if match is None:
+		logger.error('RegEx match failed.')
+		return False
+	
+	for group, sub in match.groupdict().items():
+		if not sub:  # empty or None
+			logger.warning(f'Group %{group} was not captured.')
+			continue
+		
+		# replaces all timestamps in the span with a single timestamp
+		start = text[:match.start(group)].count(' ')
+		end = start + sub.count(' ')
+		
+		timestamps[start:end] = [Timestamp(
+			f'%{group}',
+			timestamps[start].start,
+			timestamps[end - 1].end
+		)]
+		text = text.replace(sub, ' ', 1)
+	
+	return True
 
 
 def _write(i: int, timestamps: List[Timestamp]) -> None:
@@ -100,7 +123,7 @@ def _test(inds: Iterable[int]) -> None:
 def _reset():
 	"""Deletes the clips and resets the 'parsed' attribute in the JSON files."""
 	if input('ARE YOU SURE ABOUT THAT [Y/N]') != 'N':  # just making sure
-		for *_, names in os.walk(CLIPS_PATH):
+		for _, _, names in os.walk(CLIPS_PATH):
 			for name in names:
 				os.remove(name)
 		
