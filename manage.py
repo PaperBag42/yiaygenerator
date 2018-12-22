@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 """
-The default Django manage script.
+Django manage script with an extra command to setup the video clips.
 """
 
+from .yiaygenerator import clips
+
+import imageio
+
 import os
-import sys
+from sys import argv
 
 
 if __name__ == '__main__':
@@ -17,4 +21,13 @@ if __name__ == '__main__':
 			"available on your PYTHONPATH environment variable? Did you "
 			"forget to activate a virtual environment?"
 		) from exc
-	execute_from_command_line(sys.argv)
+	
+	if 'setup' in argv:
+		if '--model' in argv:
+			clips.model_setup()
+		
+		imageio.plugins.ffmpeg.download()
+		clips.create()
+	
+	else:
+		execute_from_command_line(argv)
