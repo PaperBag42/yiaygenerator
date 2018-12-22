@@ -3,7 +3,7 @@
 Django manage script with an extra command to setup the video clips.
 """
 
-from .yiaygenerator import clips
+from yiaygenerator import clips
 
 import imageio
 

@@ -44,6 +44,7 @@ _pattern = re.compile(
 	# TODO: sponsor
 	r'(?P<OUTRO>(leave|let) .*? YIAY )'
 	# r'(?P<END>.*? episode )'
+	# TODO: make a cool end card
 	r'.* '
 )
 
