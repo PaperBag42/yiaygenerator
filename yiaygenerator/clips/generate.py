@@ -18,13 +18,20 @@ CLIPS_PATH = 'expr/clips/'
 LOG_PATH = 'expr/log.csv'
 
 
-def generate(i: int) -> None:
+def create() -> None:
 	"""
-	Generates clips from a new YIAY video.
-	
-	:param i: the video's index in the playlist
+	Creates video clips from all YIAY videos.
 	"""
-	pass
+	i = 1
+	while True:
+		logger.ind = i
+		try:
+			clipped, text, timestamps = stt.speech_to_text(i)
+		except IndexError:
+			break
+		
+		if not clipped and _group(text, timestamps):  # don't use videos that don't match
+			_write(i, timestamps)
 
 
 _pattern = re.compile(
