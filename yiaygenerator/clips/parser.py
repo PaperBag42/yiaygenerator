@@ -148,7 +148,9 @@ def test(inds: Iterable[int]) -> None:
 
 
 def reset():
-	"""Deletes the clips and resets the 'parsed' attribute in the JSON files."""
+	"""
+	Deletes the clips and resets the 'parsed' attribute in the JSON files.
+	"""
 	if input('ARE YOU SURE ABOUT THAT [Y/N]') != 'N':  # just making sure
 		for _, _, names in os.walk(CLIPS_PATH):
 			for name in names:
