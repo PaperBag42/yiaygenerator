@@ -32,6 +32,8 @@ def create() -> None:
 		
 		if not clipped and _group(text, timestamps):  # don't use videos that don't match
 			_write(i, timestamps)
+		
+		i += 1
 
 
 _pattern = re.compile(
@@ -57,26 +59,27 @@ def _group(text: str, timestamps: List[Timestamp]) -> bool:
 	:return: true if the match succeeded
 	"""
 	match = _pattern.fullmatch(text)
-	
 	if match is None:
 		logger.error('RegEx match failed.')
 		return False
 	
+	diff = 0
 	for group, sub in match.groupdict().items():
 		if not sub:  # empty or None
 			logger.warning(f'Group %{group} was not captured.')
 			continue
 		
 		# replaces all timestamps in the span with a single timestamp
-		start = text[:match.start(group)].count(' ')
-		end = start + sub.count(' ')
+		count = sub.count(' ')
+		start = text[:match.start(group)].count(' ') - diff
+		end = start + count
 		
 		timestamps[start:end] = [Timestamp(
 			f'%{group}',
 			timestamps[start].start,
 			timestamps[end - 1].end
 		)]
-		text = text.replace(sub, ' ', 1)
+		diff += count - 1  # the difference in word count
 	
 	return True
 

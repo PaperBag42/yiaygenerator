@@ -42,13 +42,12 @@ def speech_to_text(i: int) -> Tuple[bool, str, List[Timestamp]]:
 		A boolean indicating whether the video was already parsed,
 		a full transcript, and timestamps for each word.
 	"""
-	logger.ind = i
 	filename = f'{JSON_PATH}/{i:03d}.json'
 	if path.isfile(filename):
 		logger.debug(f'Loading transcript from {filename}.')
 		with open(filename) as file:
 			data = json.load(file)
-			return data['parsed'], data['transcript'], data['timestamps']
+			return data['parsed'], data['transcript'], [Timestamp(*s) for s in data['timestamps']]
 	else:
 		with youtube.video(i, only_audio=True) as audio:
 			with open(audio, 'rb') as file:
@@ -112,7 +111,7 @@ def _process(filename: str, response: Dict) -> Tuple[str, List[Timestamp]]:
 			'timestamps': timestamps
 		}, file, indent='\t')
 	
-	return transcript, timestamps
+	return transcript, [Timestamp(*s) for s in timestamps]
 
 
 def _model_setup() -> str:
