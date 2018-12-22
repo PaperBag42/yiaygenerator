@@ -116,7 +116,7 @@ def _write(i: int, timestamps: List[Timestamp]) -> None:
 		data = json.load(file)
 		file.seek(0)
 		file.truncate()
-		json.dump({**data, 'parsed': True}, file)
+		json.dump({**data, 'clipped': True}, file, separators=(',', ':'))
 
 
 def test(inds: Iterable[int]) -> None:
@@ -162,4 +162,4 @@ def reset():
 				data = json.load(file)
 				file.seek(0)
 				file.truncate()
-				json.dump({**data, 'parsed': False}, file)
+				json.dump({**data, 'clipped': False}, file, separators=(',', ':'))

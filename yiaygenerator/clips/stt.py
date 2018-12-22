@@ -106,10 +106,10 @@ def _process(filename: str, response: Dict) -> Tuple[str, List[Timestamp]]:
 	# save to file
 	with open(filename, 'w') as file:
 		json.dump({
-			'parsed': False,
+			'clipped': False,
 			'transcript': transcript,
 			'timestamps': timestamps
-		}, file, indent='\t')
+		}, file, separators=(',', ':'))
 	
 	return transcript, [Timestamp(*s) for s in timestamps]
 
