@@ -118,7 +118,7 @@ def _write(i: int, timestamps: List[Timestamp]) -> None:
 		json.dump({**data, 'parsed': True}, file)
 
 
-def _test(inds: Iterable[int]) -> None:
+def test(inds: Iterable[int]) -> None:
 	"""
 	Tests the RegEx pattern against a range of YIAY videos.
 	
@@ -147,7 +147,7 @@ def _test(inds: Iterable[int]) -> None:
 	logger.info(f'Matched {matched}/{total} videos.')
 
 
-def _reset():
+def reset():
 	"""Deletes the clips and resets the 'parsed' attribute in the JSON files."""
 	if input('ARE YOU SURE ABOUT THAT [Y/N]') != 'N':  # just making sure
 		for _, _, names in os.walk(CLIPS_PATH):
@@ -160,4 +160,3 @@ def _reset():
 				file.seek(0)
 				file.truncate()
 				json.dump({**data, 'parsed': False}, file)
-

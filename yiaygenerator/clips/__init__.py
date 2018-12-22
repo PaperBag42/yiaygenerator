@@ -10,3 +10,4 @@ What it does:
 """
 
 from .parser import create, CLIPS_PATH
+from .stt import model_setup

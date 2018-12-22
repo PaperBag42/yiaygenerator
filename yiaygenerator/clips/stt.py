@@ -114,7 +114,7 @@ def _process(filename: str, response: Dict) -> Tuple[str, List[Timestamp]]:
 	return transcript, [Timestamp(*s) for s in timestamps]
 
 
-def _model_setup() -> str:
+def model_setup() -> str:
 	"""
 	Sets up a language model for the speech-to-text service,
 	and returns its ID.
