@@ -29,7 +29,7 @@ with open(HOMOPHONES_PATH) as file:
 			_homophones[word] = homophone
 
 
-def get_homophone(word: str) -> str:
+def get(word: str) -> str:
 	"""
 	Searches for a homophone of a given word.
 

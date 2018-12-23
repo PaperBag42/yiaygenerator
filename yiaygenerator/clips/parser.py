@@ -108,10 +108,8 @@ def _write(i: int, timestamps: List[Timestamp]) -> None:
 			
 			logger.info(f'Writing {len(timestamps)} clips...')
 			for word, start, end in timestamps:
-				dirname = (
-					f'{CLIPS_PATH}/'
-					f'{word if word.startswith("%") else homophones.get_homophone(word)}/'
-				)
+				
+				dirname = f'{CLIPS_PATH}/{word if word.startswith("%") else homophones.get(word)}/'
 				if not os.path.isdir(dirname):
 					os.mkdir(dirname)
 				
