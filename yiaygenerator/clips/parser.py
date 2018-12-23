@@ -12,7 +12,7 @@ import moviepy.video.io.VideoFileClip
 import re
 import os
 import json
-import collections
+from collections import Counter
 
 CLIPS_PATH = 'expr/clips/'
 LOG_PATH = 'expr/log.csv'
@@ -92,7 +92,7 @@ def _write(i: int, timestamps: List[Timestamp]) -> None:
 	:param i: the video's index
 	:param timestamps: the timestamps list
 	"""
-	count = collections.Counter()
+	count = Counter()
 	
 	with youtube.video(i, only_audio=False) as video:
 		with moviepy.video.io.VideoFileClip.VideoFileClip(video) as clip:
@@ -125,6 +125,7 @@ def test(inds: Iterable[int]) -> None:
 	
 	:param inds: indexes of videos to test
 	"""
+	groups = Counter()
 	matched = 0
 	total = 0
 	for i in inds:
@@ -140,12 +141,15 @@ def test(inds: Iterable[int]) -> None:
 		
 		matched += 1
 		for name, part in match.groupdict().items():
-			if part is None:
+			if not part:
 				logger.warning(f'Group %{name} was not captured.')
 				continue
-			
+			groups[name] += 1
 			logger.info(f'Group %{name}: {100 * len(part) / len(text):.2f}% of video.')
-	logger.info(f'Matched {matched}/{total} videos.')
+			
+	print(f'Matched {matched}/{total} ({100 * matched / total:.2f}%) videos.')
+	for name, count in groups.items():
+		print(f'Group %{name}: {count}/{matched} ({100 * count / matched:.2f}%) videos.')
 
 
 def reset():

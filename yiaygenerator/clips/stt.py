@@ -47,7 +47,7 @@ def speech_to_text(i: int) -> Tuple[bool, str, List[Timestamp]]:
 		logger.debug(f'Loading transcript from {filename}.')
 		with open(filename) as file:
 			data = json.load(file)
-			return data['parsed'], data['transcript'], [Timestamp(*s) for s in data['timestamps']]
+			return data['clipped'], data['transcript'], [Timestamp(*s) for s in data['timestamps']]
 	else:
 		with youtube.video(i, only_audio=True) as audio:
 			with open(audio, 'rb') as file:
