@@ -27,7 +27,7 @@ if __name__ == '__main__':
 			clips.model_setup()
 		
 		imageio.plugins.ffmpeg.download()
-		clips.create()
+		clips.create_all()
 	
 	else:
 		execute_from_command_line(argv)

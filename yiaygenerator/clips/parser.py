@@ -18,22 +18,31 @@ CLIPS_PATH = 'expr/clips/'
 LOG_PATH = 'expr/log.csv'
 
 
-def create() -> None:
+def create_all() -> None:
 	"""
 	Creates video clips from all YIAY videos.
 	"""
 	i = 1
 	while True:
-		logger.ind = i
 		try:
-			clipped, text, timestamps = stt.speech_to_text(i)
+			create(i)
 		except IndexError:
 			break
 		
-		if not clipped and _group(text, timestamps):  # don't use videos that don't match
-			_write(i, timestamps)
-		
 		i += 1
+
+
+def create(i: int) -> None:
+	"""
+	Creates video clips from a single YIAY video.
+	
+	:param i: the video's index in the playlist
+	"""
+	logger.ind = i
+	clipped, text, timestamps = stt.speech_to_text(i)
+	
+	if not clipped and _group(text, timestamps):  # don't use videos that don't match
+		_write(i, timestamps)
 
 
 _pattern = re.compile(
