@@ -14,10 +14,11 @@ from watson_developer_cloud.speech_to_text_v1 import CustomWord
 
 import json
 import time
-from os import path, environ
+from os import environ, PathLike
+from pathlib import Path
 
-JSON_PATH = 'expr/stt/'
-MODEL_PATH = 'stt_custom/'
+json_path = Path('expr/stt/')
+model_path = Path('stt_custom/')
 
 _service = watson.SpeechToTextV1(
 	username=environ['WATSON_USERNAME'],
@@ -42,16 +43,16 @@ def speech_to_text(i: int) -> Tuple[bool, str, List[Timestamp]]:
 		A boolean indicating whether the video was already parsed,
 		a full transcript, and timestamps for each word.
 	"""
-	filename = f'{JSON_PATH}/{i:03d}.json'
-	if path.isfile(filename):
-		logger.debug(f'Loading transcript from {filename}.')
-		with open(filename) as file:
+	path = json_path / f'{i:03d}.json'
+	if path.exists():
+		logger.debug(f'Loading transcript from {path}.')
+		with open(path) as file:
 			data = json.load(file)
-			return data['clipped'], data['transcript'], [Timestamp(*s) for s in data['timestamps']]
+		return data['clipped'], data['transcript'], [Timestamp(*s) for s in data['timestamps']]
 	else:
 		with youtube.video(i, only_audio=True) as audio:
 			with open(audio, 'rb') as file:
-				return (False, *_process(filename, _request(file)))
+				return (False, *_process(path, _request(file)))
 
 
 def _request(stream: BinaryIO) -> Dict:
@@ -82,7 +83,7 @@ def _request(stream: BinaryIO) -> Dict:
 		return _request(stream)
 
 
-def _process(filename: str, response: Dict) -> Tuple[str, List[Timestamp]]:
+def _process(filename: PathLike, response: Dict) -> Tuple[str, List[Timestamp]]:
 	"""
 	Collects the relevant data from an API response,
 	and saves it in a JSON file.
@@ -131,15 +132,15 @@ def model_setup() -> str:
 		CustomWord('answers', ['cancers']),
 	])
 	
-	filename = f'{MODEL_PATH}/outro.txt'
+	filename = model_path / 'outro.txt'
 	with open(filename) as file:
-		_service.add_corpus(model_id, path.basename(filename), file)
+		_service.add_corpus(model_id, filename.name, file)
 	
 	while _service.get_language_model(model_id).get_result()['status'] != 'ready':
 		time.sleep(5)
 	_service.train_language_model(model_id)
 	
-	with open(f'{MODEL_PATH}/words.json', 'w') as file:
+	with open(model_path / 'words.json', 'w') as file:
 		json.dump(_service.list_words(model_id).get_result(), file, indent='\t')
 	
 	return model_id

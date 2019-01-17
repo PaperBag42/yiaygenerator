@@ -4,18 +4,17 @@ from typing import List, Iterable
 
 from .. import homophones
 from . import youtube, stt
-from .stt import Timestamp, JSON_PATH
+from .stt import Timestamp, json_path
 from ._logging import logger
 
 import moviepy.video.io.VideoFileClip
 
 import re
-import os
 import json
+import pathlib
 from collections import Counter
 
-CLIPS_PATH = 'expr/clips/'
-LOG_PATH = 'expr/log.csv'
+clips_path = pathlib.Path('expr/clips/')
 
 
 def create_all() -> None:
@@ -109,17 +108,17 @@ def _write(i: int, timestamps: List[Timestamp]) -> None:
 			logger.info(f'Writing {len(timestamps)} clips...')
 			for word, start, end in timestamps:
 				
-				dirname = f'{CLIPS_PATH}/{word if word.startswith("%") else homophones.get(word)}/'
-				if not os.path.isdir(dirname):
-					os.mkdir(dirname)
+				dirname = clips_path / (word if word.startswith("%") else homophones.get(word))
+				if not dirname.exists():
+					dirname.mkdir()
 				
 				clip.subclip(start, end).write_videofile(
-					f'{dirname}/{i:03d}-{count[word]:03d}.mp4',
+					str(dirname / f'{i:03d}-{count[word]:03d}.mp4'),
 					verbose=False, progress_bar=False
 				)
 				count[word] += 1
 		
-	with open(f'{JSON_PATH}/{i:03d}.json', 'r+') as file:
+	with open(json_path / f'{i:03d}.json', 'r+') as file:
 		data = json.load(file)
 		file.seek(0)
 		file.truncate()
@@ -164,11 +163,11 @@ def reset():
 	Deletes the clips and resets the 'parsed' attribute in the JSON files.
 	"""
 	if input('ARE YOU SURE ABOUT THAT [Y/N]') != 'N':  # just making sure
-		for _, _, names in os.walk(CLIPS_PATH):
-			for name in names:
-				os.remove(name)
+		for word in clips_path.iterdir():
+			for clip in word.iterdir():
+				clip.unlink()
 		
-		for name in os.listdir(JSON_PATH):
+		for name in json_path.iterdir():
 			with open(name, 'r+') as file:
 				data = json.load(file)
 				file.seek(0)
