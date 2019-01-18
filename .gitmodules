@@ -1,0 +1,3 @@
+[submodule "homophone"]
+	path = homophone
+	url = https://github.com/PaperBag42/homophone

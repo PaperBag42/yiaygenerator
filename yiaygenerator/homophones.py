@@ -5,7 +5,7 @@ thus allowing broader usage of the video clips.
 
 import re
 
-HOMOPHONES_PATH = 'expr/assets/homophone_list.csv'
+HOMOPHONES_PATH = 'homophone/homophone_list.csv'
 
 _non_letter = re.compile(r'[^a-z]')
 
