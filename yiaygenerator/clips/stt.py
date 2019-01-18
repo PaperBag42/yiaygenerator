@@ -8,8 +8,8 @@ from typing import Tuple, List, Dict, BinaryIO, NamedTuple
 from . import youtube
 from ._logging import logger
 
-import requests
 import watson_developer_cloud as watson
+from watson_developer_cloud.watson_service import requests
 from watson_developer_cloud.speech_to_text_v1 import CustomWord
 
 import json
