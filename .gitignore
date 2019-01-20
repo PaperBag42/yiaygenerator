@@ -5,7 +5,8 @@ expr/
 *.webm
 *.mp4
 *.part
-TEMP_MPY_*
+best*
+*TEMP_MPY_*
 
 
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and WebStorm
