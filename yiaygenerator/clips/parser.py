@@ -25,6 +25,8 @@ def create_all() -> None:
 	while True:
 		try:
 			create(i)
+		except youtube.DownloadError:
+			pass
 		except IndexError:
 			break
 		

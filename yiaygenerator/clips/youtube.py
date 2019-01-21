@@ -5,11 +5,12 @@ from typing import ContextManager
 from ._logging import logger
 
 import youtube_dl
+from youtube_dl.utils import DownloadError
 
 import contextlib
 import os
 
-PLAYLIST_URL = ('https://www.youtube.com/playlist?list=PLiWL8lZPZ2_k1JH6urJ_H7HzH9etwmn7M',)
+PLAYLIST_URL = 'https://www.youtube.com/playlist?list=PLiWL8lZPZ2_k1JH6urJ_H7HzH9etwmn7M',
 
 
 @contextlib.contextmanager
@@ -32,7 +33,11 @@ def video(i: int, only_audio: bool) -> ContextManager[str]:
 		'outtmpl': fmt,
 		'quiet': True,
 	}) as yt:
-		yt.download(PLAYLIST_URL)
+		try:
+			yt.download(PLAYLIST_URL)
+		except DownloadError:
+			logger.error('Youtube failed to provide video')
+			raise
 	
 	if not os.path.isfile(fmt):
 		raise IndexError(i)
