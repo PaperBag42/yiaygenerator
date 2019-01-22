@@ -105,7 +105,7 @@ def _write(i: int, timestamps: List[Timestamp]) -> None:
 	count = Counter()
 	
 	with youtube.video(i, only_audio=False) as video:
-		with moviepy.video.io.VideoFileClip.VideoFileClip(video) as clip:
+		with moviepy.video.io.VideoFileClip.VideoFileClip(str(video)) as clip:
 			
 			logger.info(f'Writing {len(timestamps)} clips...')
 			for word, start, end in timestamps:

@@ -8,41 +8,50 @@ import youtube_dl
 from youtube_dl.utils import DownloadError
 
 import contextlib
-import os
+from pathlib import Path
+from os import PathLike
 
 PLAYLIST_URL = 'https://www.youtube.com/playlist?list=PLiWL8lZPZ2_k1JH6urJ_H7HzH9etwmn7M',
+cache_path = Path('expr/cache')
 
 
 @contextlib.contextmanager
-def video(i: int, only_audio: bool) -> ContextManager[str]:
+def video(i: int, only_audio: bool) -> ContextManager[PathLike]:
 	"""
 	Downloads a video from YouTube.
+	If the video cannot be downloaded, tries to get it from a cache directory.
 
 	:param i: the video's index in the playlist
 	:param only_audio: True to download only audio, False to download video and audio
-	:return: a context manager which returns the video file's path and removes it on exit.
+	:return: a context manager which returns the video file's path and removes it on exit
 	:raise IndexError: if i surpasses the playlist's bounds
+	:raise DownloadError: if a YouTube server side error occurs
 	"""
-	fmt = 'bestaudio[ext=webm]' if only_audio else 'best[ext=mp4]'
+	path = Path(f'{i:03d}.{"webm" if only_audio else "mp4"}')
 	
 	logger.info(f'Downloading {"audio" if only_audio else "video"}...')
 	with youtube_dl.YoutubeDL({
+		'quiet': True,
 		'playlistreverse': True,
 		'playlist_items': str(i),
-		'format': fmt,
-		'outtmpl': fmt,
-		'quiet': True,
+		'format': 'bestaudio[ext=webm]' if only_audio else 'best[ext=mp4]',
+		'outtmpl': str(path),
 	}) as yt:
 		try:
 			yt.download(PLAYLIST_URL)
 		except DownloadError:
-			logger.error('Youtube failed to provide video')
-			raise
+			path = cache_path / path
+			if not path.exists():
+				logger.error('Youtube failed to provide video')
 	
-	if not os.path.isfile(fmt):
+	if not path.exists():
 		raise IndexError(i)
 	
 	try:
-		yield fmt
+		yield path
 	finally:
-		os.remove(fmt)
+		if path.parent != cache_path:
+			try:
+				path.remove()
+			except PermissionError:
+				logger.error('Failed to remove file')
