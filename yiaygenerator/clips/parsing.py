@@ -17,14 +17,14 @@ from collections import Counter
 clips_path = pathlib.Path('expr/clips/')
 
 
-def create_all() -> None:
+def make_all() -> None:
 	"""
-	Creates video clips from all YIAY videos.
+	Makes video clips from all YIAY videos.
 	"""
 	i = 1
 	while True:
 		try:
-			create(i)
+			make_from(i)
 		except youtube.DownloadError:
 			pass
 		except IndexError:
@@ -33,9 +33,9 @@ def create_all() -> None:
 		i += 1
 
 
-def create(i: int) -> None:
+def make_from(i: int) -> None:
 	"""
-	Creates video clips from a single YIAY video.
+	Makes video clips from a single YIAY video.
 	
 	:param i: the video's index in the playlist
 	"""
@@ -162,7 +162,7 @@ def test(inds: Iterable[int]) -> None:
 
 def reset():
 	"""
-	Deletes the clips and resets the 'parsed' attribute in the JSON files.
+	Deletes the clips and resets the 'clipped' attribute in the JSON files.
 	"""
 	if input('ARE YOU SURE ABOUT THAT [Y/N]') != 'N':  # just making sure
 		for word in clips_path.iterdir():

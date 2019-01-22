@@ -26,7 +26,7 @@ if __name__ == '__main__':
 		
 		from moviepy.video.io.gif_writers import imageio
 		imageio.plugins.ffmpeg.download()
-		clips.create_all()
+		clips.make_all()
 	
 	else:
 		execute_from_command_line(argv)

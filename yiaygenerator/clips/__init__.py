@@ -9,5 +9,5 @@ What it does:
 	- splits the video to clips and writes them to files
 """
 
-from .parser import create_all, clips_path
+from .parsing import make_all, clips_path
 from .stt import model_setup
