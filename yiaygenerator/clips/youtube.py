@@ -52,6 +52,6 @@ def video(i: int, only_audio: bool) -> ContextManager[PathLike]:
 	finally:
 		if path.parent != cache_path:
 			try:
-				path.remove()
+				path.unlink()
 			except PermissionError:
 				logger.error('Failed to remove file')
