@@ -7,14 +7,50 @@ from . import youtube, stt
 from .stt import Timestamp, json_path
 from ._logging import logger
 
+import moviepy.video as mpy
+import moviepy.video.VideoClip
+import moviepy.video.compositing.CompositeVideoClip
 import moviepy.video.io.VideoFileClip
+import moviepy.video.io.downloader
+import moviepy.video.tools.drawing
+import moviepy.video.fx.resize
 
 import re
 import json
-import pathlib
+from pathlib import Path
 from collections import Counter
 
-clips_path = pathlib.Path('expr/clips/')
+clips_path = Path('expr/clips/')
+avatar_path = Path('expr/avatar.jpeg')
+
+AVATAR_URL = 'https://avatars0.githubusercontent.com/u/39616775?v=4'
+END_CARD_START = 379
+CLIP_SIZE = 1280, 720
+BOX_SIZE = 412, 231
+TEXT_POS = 828, 361
+AVATAR_POS = 828, 101
+
+
+# end card overlay setup (avatar and link at the end)
+
+mpy.io.downloader.download_webfile(AVATAR_URL, avatar_path)
+avatar = mpy.VideoClip.ImageClip(str(avatar_path)) \
+	.fx(mpy.fx.resize.resize, height=BOX_SIZE[1])
+center = avatar.w / 2, avatar.h / 2
+
+_end_card = mpy.compositing.CompositeVideoClip.CompositeVideoClip([
+	avatar
+		.set_position((int(AVATAR_POS[0] + BOX_SIZE[0] / 2 - center[0]), AVATAR_POS[1]))
+		.set_mask(mpy.VideoClip.ImageClip(mpy.tools.drawing.circle(
+			avatar.size, center, min(center),
+		), ismask=True)),
+	mpy.VideoClip.TextClip(
+		'www.github.com/\nPaperBag42/yiaygenerator',
+		font='Cooper-Black', size=BOX_SIZE,
+	).set_position(TEXT_POS),
+], size=CLIP_SIZE)
+
+del avatar, center
 
 
 def make_all() -> None:
@@ -53,9 +89,9 @@ _pattern = re.compile(
 	r'.* '
 	# TODO: sponsor
 	r'(?P<OUTRO>(leave|let) .*? YIAY )'
-	# r'(?P<END>.*? episode )'
 	# TODO: make a cool end card
-	r'.* '
+	# r'(?P<END>.*? episode )'
+	r'(?P<END>.* )'
 )
 
 
@@ -102,10 +138,10 @@ def _write(i: int, timestamps: List[Timestamp]) -> None:
 	:param i: the video's index
 	:param timestamps: the timestamps list
 	"""
-	count = Counter()
+	word_count = Counter()
 	
 	with youtube.video(i, only_audio=False) as video:
-		with moviepy.video.io.VideoFileClip.VideoFileClip(str(video)) as clip:
+		with mpy.io.VideoFileClip.VideoFileClip(str(video)) as clip:
 			
 			logger.info(f'Writing {len(timestamps)} clips...')
 			for word, start, end in timestamps:
@@ -118,7 +154,7 @@ def _write(i: int, timestamps: List[Timestamp]) -> None:
 					str(dirname / f'{i:03d}-{count[word]:03d}.mp4'),
 					verbose=False, progress_bar=False
 				)
-				count[word] += 1
+				word_count[word] += 1
 		
 	with open(json_path / f'{i:03d}.json', 'r+') as file:
 		data = json.load(file)
