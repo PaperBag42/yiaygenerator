@@ -85,12 +85,11 @@ def make_from(i: int) -> None:
 _pattern = re.compile(
 	r'(?P<INTRO>.*? asked you )?'
 	r'.*? '
-	r'(?P<START>(here .*? )?answers )?'  # will probably break a lot (he sometimes says "let's go" or other random stuff)
+	r'(?P<START>(here .*? )?answers )?'  # breaks a lot (he sometimes says "let's go" or other random stuff)
 	r'.* '
 	# TODO: sponsor
 	r'(?P<OUTRO>(leave|let) .*? YIAY )'
-	# TODO: make a cool end card
-	# r'(?P<END>.*? episode )'
+	# r'(?P<END>.*? episode )'  # TODO: add the user's previous clip?
 	r'(?P<END>.* )'
 )
 
@@ -145,13 +144,21 @@ def _write(i: int, timestamps: List[Timestamp]) -> None:
 			
 			logger.info(f'Writing {len(timestamps)} clips...')
 			for word, start, end in timestamps:
+				logger.debug(f'{word}: {start:.2f} - {end:.2f}')
 				
 				dirname = clips_path / (word if word.startswith("%") else homophones.get(word))
 				if not dirname.exists():
 					dirname.mkdir()
 				
-				clip.subclip(start, end).write_videofile(
-					str(dirname / f'{i:03d}-{count[word]:03d}.mp4'),
+				sub = clip.subclip(start, end)
+				if word == '%END' and i >= END_CARD_START:
+					logger.info('Applying overlay to end card.')
+					sub = mpy.compositing.CompositeVideoClip.CompositeVideoClip([
+						sub, _end_card.set_duration(sub.duration)
+					])
+				
+				sub.write_videofile(
+					str(dirname / f'{i:03d}-{word_count[word]:03d}.mp4'),
 					verbose=False, progress_bar=False
 				)
 				word_count[word] += 1
