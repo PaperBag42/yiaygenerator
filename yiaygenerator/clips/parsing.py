@@ -1,6 +1,6 @@
 """Generates video clips using the speech-to-text results."""
 
-from typing import List, Iterable, Optional
+from typing import Optional, Dict, Set, List, Iterable
 
 from .. import homophones
 from . import youtube, stt
@@ -15,8 +15,11 @@ import moviepy.video.tools.drawing
 import moviepy.video.fx.resize
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 
+from django.core.cache import cache
+
 import re
 import json
+from os import PathLike
 from pathlib import Path
 from collections import Counter
 
@@ -40,6 +43,9 @@ def make_all() -> None:
 			break
 		
 		i += 1
+	
+	cache.set('clips', {p.name: set(p.iterdir()) for p in clips_path.iterdir()})
+	cache.incr_version('clips')
 
 
 def make_from(i: int, end_card: Optional[CompositeVideoClip] = None) -> None:
@@ -54,6 +60,14 @@ def make_from(i: int, end_card: Optional[CompositeVideoClip] = None) -> None:
 	
 	if not clipped and _group(text, timestamps):  # don't use videos that don't match
 		_write(i, timestamps, end_card)
+
+
+def get_list() -> Dict[str, Set[PathLike]]:
+	"""
+	Returns a dict mapping words to paths
+	to the available clips.
+	"""
+	return cache.get('clips')
 
 
 _pattern = re.compile(
