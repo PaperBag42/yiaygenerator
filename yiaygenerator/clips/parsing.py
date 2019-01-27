@@ -1,6 +1,6 @@
 """Generates video clips using the speech-to-text results."""
 
-from typing import List, Iterable
+from typing import List, Iterable, Optional
 
 from .. import homophones
 from . import youtube, stt
@@ -9,11 +9,11 @@ from ._logging import logger
 
 import moviepy.video as mpy
 import moviepy.video.VideoClip
-import moviepy.video.compositing.CompositeVideoClip
 import moviepy.video.io.VideoFileClip
 import moviepy.video.io.downloader
 import moviepy.video.tools.drawing
 import moviepy.video.fx.resize
+from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 
 import re
 import json
@@ -23,44 +23,17 @@ from collections import Counter
 clips_path = Path('expr/clips/')
 avatar_path = Path('expr/avatar.jpeg')
 
-AVATAR_URL = 'https://avatars0.githubusercontent.com/u/39616775?v=4'
-END_CARD_START = 379
-CLIP_SIZE = 1280, 720
-BOX_SIZE = 412, 231
-TEXT_POS = 828, 361
-AVATAR_POS = 828, 101
-
-
-# end card overlay setup (avatar and link at the end)
-
-mpy.io.downloader.download_webfile(AVATAR_URL, avatar_path)
-avatar = mpy.VideoClip.ImageClip(str(avatar_path)) \
-	.fx(mpy.fx.resize.resize, height=BOX_SIZE[1])
-center = avatar.w / 2, avatar.h / 2
-
-_end_card = mpy.compositing.CompositeVideoClip.CompositeVideoClip([
-	avatar
-		.set_position((int(AVATAR_POS[0] + BOX_SIZE[0] / 2 - center[0]), AVATAR_POS[1]))
-		.set_mask(mpy.VideoClip.ImageClip(mpy.tools.drawing.circle(
-			avatar.size, center, min(center),
-		), ismask=True)),
-	mpy.VideoClip.TextClip(
-		'www.github.com/\nPaperBag42/yiaygenerator',
-		font='Cooper-Black', size=BOX_SIZE,
-	).set_position(TEXT_POS),
-], size=CLIP_SIZE)
-
-del avatar, center
-
 
 def make_all() -> None:
 	"""
 	Makes video clips from all YIAY videos.
 	"""
+	end_card = _build_end_card_overlay()
+	
 	i = 1
 	while True:
 		try:
-			make_from(i)
+			make_from(i, end_card)
 		except youtube.DownloadError:
 			pass
 		except IndexError:
@@ -69,17 +42,18 @@ def make_all() -> None:
 		i += 1
 
 
-def make_from(i: int) -> None:
+def make_from(i: int, end_card: Optional[CompositeVideoClip] = None) -> None:
 	"""
 	Makes video clips from a single YIAY video.
 	
 	:param i: the video's index in the playlist
+	:param end_card: an overlay clip to apply on end cards.
 	"""
 	logger.ind = i
 	clipped, text, timestamps = stt.speech_to_text(i)
 	
 	if not clipped and _group(text, timestamps):  # don't use videos that don't match
-		_write(i, timestamps)
+		_write(i, timestamps, end_card)
 
 
 _pattern = re.compile(
@@ -130,12 +104,13 @@ def _group(text: str, timestamps: List[Timestamp]) -> bool:
 	return True
 
 
-def _write(i: int, timestamps: List[Timestamp]) -> None:
+def _write(i: int, timestamps: List[Timestamp], end_card: CompositeVideoClip) -> None:
 	"""
 	Writes clips from a YIAY video using a list of timestamps.
 	
 	:param i: the video's index
 	:param timestamps: the timestamps list
+	:param end_card: an overlay clip to apply on end cards.
 	"""
 	word_count = Counter()
 	
@@ -154,7 +129,7 @@ def _write(i: int, timestamps: List[Timestamp]) -> None:
 				if word == '%END' and i >= END_CARD_START:
 					logger.info('Applying overlay to end card.')
 					sub = mpy.compositing.CompositeVideoClip.CompositeVideoClip([
-						sub, _end_card.set_duration(sub.duration)
+						sub, end_card.set_duration(sub.duration)
 					])
 				
 				sub.write_videofile(
@@ -168,6 +143,42 @@ def _write(i: int, timestamps: List[Timestamp]) -> None:
 		file.seek(0)
 		file.truncate()
 		json.dump({**data, 'clipped': True}, file, separators=(',', ':'))
+
+
+AVATAR_URL = 'https://avatars0.githubusercontent.com/u/39616775?v=4'
+END_CARD_START = 379
+CLIP_SIZE = 1280, 720
+BOX_SIZE = 412, 231
+TEXT_POS = 828, 361
+AVATAR_POS = 828, 101
+
+
+def _build_end_card_overlay() -> CompositeVideoClip:
+	"""
+	Builds an overlay clip to apply on end cards.
+	Currently contains:
+		- My Github avatar
+		- The Github repo URL
+	
+	:return: the clip object to use as overlay
+	"""
+	mpy.io.downloader.download_webfile(AVATAR_URL, avatar_path)
+	
+	avatar = mpy.VideoClip.ImageClip(str(avatar_path)) \
+		.fx(mpy.fx.resize.resize, height=BOX_SIZE[1])
+	center = avatar.w / 2, avatar.h / 2
+	
+	return CompositeVideoClip([
+		avatar
+			.set_position((int(AVATAR_POS[0] + BOX_SIZE[0] / 2 - center[0]), AVATAR_POS[1]))
+			.set_mask(mpy.VideoClip.ImageClip(mpy.tools.drawing.circle(
+				avatar.size, center, min(center),
+			), ismask=True)),
+		mpy.VideoClip.TextClip(
+			'www.github.com/\nPaperBag42/yiaygenerator',
+			font='Cooper-Black', size=BOX_SIZE,
+		).set_position(TEXT_POS),
+	], size=CLIP_SIZE)
 
 
 def test(inds: Iterable[int]) -> None:
