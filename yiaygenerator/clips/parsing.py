@@ -45,7 +45,6 @@ def make_all() -> None:
 		i += 1
 	
 	cache.set('clips', {p.name: set(p.iterdir()) for p in clips_path.iterdir()})
-	cache.incr_version('clips')
 
 
 def make_from(i: int, end_card: Optional[CompositeVideoClip] = None) -> None:
@@ -67,7 +66,9 @@ def get_list() -> Dict[str, Set[PathLike]]:
 	Returns a dict mapping words to paths
 	to the available clips.
 	"""
-	return cache.get('clips')
+	return cache.get_or_set(
+		'clips', lambda: {p.name: set(p.iterdir()) for p in clips_path.iterdir()}
+	)
 
 
 _pattern = re.compile(

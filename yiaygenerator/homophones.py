@@ -38,6 +38,10 @@ def load() -> None:
 	cache.set('homophones', homophones)
 
 
+# TODO: check if it really needs to be cached
+# if not, revert 77f7f719
+
+
 def get(word: str) -> str:
 	"""
 	Searches for a homophone of a given word.
