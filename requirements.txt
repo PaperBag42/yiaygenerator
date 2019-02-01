@@ -1,7 +1,10 @@
 django
-watson_developer_cloud
-moviepy<=0.2.3.5
 
 # youtube_dl fork that supports reverse indexing
 # TODO: check if it was merged already
 git+https://github.com/ALurker/youtube-dl.git@6845_playlist_start_and_reverse_fix
+
+watson_developer_cloud
+moviepy<=0.2.3.5
+
+twitter
