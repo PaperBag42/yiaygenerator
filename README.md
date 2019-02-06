@@ -30,18 +30,18 @@ before finishing the project.
 
 ### Q&A
 
-##### Why do you love Jack so much?
+#### Why do you love Jack so much?
 
 I don't. I actually kinda hate him.
 I get a panic attack every time I write anything on the internet
 because of this guy. But you know what I do love? Coding, of course :3
 
-##### Why Watson Developer Cloud?
+#### Why Watson Developer Cloud?
 
 I actually went to a meetup of theirs a while ago
 and they gave us an explanation about how to use their API,
 as well as some free pizza and promo codes. So yeah, I'm basically sponsored.
 
-##### Are you really going to finish this project?
+#### Are you really going to finish this project?
 
 You bet your ass I ain't : ^) but we'll see how far I get.
