@@ -1,4 +1,7 @@
 # The YIAY Generator
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/3b14d39227e64bca8065d0dacd2e91bd)](https://app.codacy.com/app/PaperBag42/yiaygenerator?utm_source=github.com&utm_medium=referral&utm_content=PaperBag42/yiaygenerator&utm_campaign=Badge_Grade_Dashboard)
+
 My experience tells me to stop writing readme's
 before finishing the project.
 
