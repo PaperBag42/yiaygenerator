@@ -31,18 +31,17 @@ def make_all() -> None:
 	"""
 	Makes video clips from all YIAY videos.
 	"""
-	end_card = _build_end_card_overlay()
-	
-	i = 1
-	while True:
-		try:
-			make_from(i, end_card)
-		except youtube.DownloadError:
-			pass
-		except IndexError:
-			break
+	with _end_card_overlay() as end_card:
 		
-		i += 1
+		i = 1
+		while True:
+			try:
+				make_from(i, end_card)
+			except youtube.DownloadError:
+				pass
+			except IndexError:
+				break
+			i += 1
 	
 	cache.set('clips', {p.name: set(p.iterdir()) for p in clips_path.iterdir()})
 
@@ -168,7 +167,7 @@ TEXT_POS = 828, 361
 AVATAR_POS = 828, 101
 
 
-def _build_end_card_overlay() -> CompositeVideoClip:
+def _end_card_overlay() -> CompositeVideoClip:
 	"""
 	Builds an overlay clip to apply on end cards.
 	Currently contains:
