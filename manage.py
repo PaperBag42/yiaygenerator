@@ -24,8 +24,6 @@ if __name__ == '__main__':
 		if '--model' in argv:
 			clips.model_setup()
 		
-		from moviepy.video.io.gif_writers import imageio
-		imageio.plugins.ffmpeg.download()
 		clips.make_all()
 	
 	else:

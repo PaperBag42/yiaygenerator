@@ -118,7 +118,7 @@ def _group(text: str, timestamps: List[Timestamp]) -> bool:
 	return True
 
 
-def _write(i: int, timestamps: List[Timestamp], end_card: CompositeVideoClip) -> None:
+def _write(i: int, timestamps: List[Timestamp], end_card: Optional[CompositeVideoClip]) -> None:
 	"""
 	Writes clips from a YIAY video using a list of timestamps.
 	
@@ -140,7 +140,7 @@ def _write(i: int, timestamps: List[Timestamp], end_card: CompositeVideoClip) ->
 					dirname.mkdir()
 				
 				sub = clip.subclip(start, end)
-				if word == '%END' and i >= END_CARD_START:
+				if word == '%END' and i >= END_CARD_START and end_card is not None:
 					logger.info('Applying overlay to end card.')
 					sub = mpy.compositing.CompositeVideoClip.CompositeVideoClip([
 						sub, end_card.set_duration(sub.duration)
