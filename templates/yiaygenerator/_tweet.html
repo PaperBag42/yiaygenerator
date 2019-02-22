@@ -52,19 +52,20 @@
 	<div class="content">
 		<div class="stream-item-header">
 			<a class="account-group">
-				<img
-						class="avatar"
-						src="https://pbs.twimg.com/profile_images/1087951521361379330/bNX0t71F_bigger.jpg"
-						alt=""
-				/>
+				<img alt="" class="avatar" src="{{ user.profile_image_url_https }}" />
+
 				<span class="FullNameGroup">
-					<strong class="fullname show-popup-with-id u-textTruncate">Muniba Mazari</strong>
+					<strong class="fullname show-popup-with-id u-textTruncate">{{ user.name }}</strong>
+
 					<span class="UserBadges">
+					{% if user.verified %}
 						<span class="Icon Icon--verified"></span>
+					{% endif %}
 					</span>
 					<span class="UserNameBreak">&nbsp;</span>
 				</span>
-				<span class="username u-dir u-textTruncate"	dir="ltr">@<b>muniba_mazari</b></span>
+
+				<span class="username u-dir u-textTruncate"	dir="ltr">@<b>{{ user.screen_name }}</b></span>
 			</a>
 
 			<small class="time">
@@ -91,13 +92,15 @@
 		<div class="ReplyingToContextBelowAuthor">
 			Replying to
 	        <a class="pretty-link" dir="ltr">
-				<span class="username u-dir u-textTruncate" dir="ltr">@<b>mviki_Tanoli</b></span>
+				<span class="username u-dir u-textTruncate" dir="ltr">@<b>jacksfilms</b></span>
+		        {# use jacksfilms or in_reply_to_screen_name? #}
 	        </a>
 		</div>
-		<p class="TweetTextSize tweet-text" lang="en">Stay blessed! :)</p>
+		<p class="TweetTextSize tweet-text" lang="en">{{ full_text }}</p>
 
 		<div class="stream-item-footer">
 			<div class="ProfileTweet-actionList" role="group" aria-label="Tweet actions">
+
 				<div class="ProfileTweet-action ProfileTweet-action--reply">
 					<button class="ProfileTweet-actionButton" type="button">
 						<div class="IconContainer">
@@ -113,9 +116,15 @@
 						<div class="IconContainer">
 							<span class="Icon Icon--medium Icon--retweet"></span>
 						</div>
+					{% if retweet_count == 0 %}
 						<span class="ProfileTweet-actionCount ProfileTweet-actionCount--isZero">
 							<span class="ProfileTweet-actionCountForPresentation" aria-hidden="true"></span>
 						</span>
+					{% else %}
+						<span class="ProfileTweet-actionCount">
+							<span class="ProfileTweet-actionCountForPresentation" aria-hidden="true">{{ retweet_count }}</span>
+						</span>
+					{% endif %}
 					</button>
 				</div>
 				<div class="ProfileTweet-action ProfileTweet-action--favorite">
@@ -124,9 +133,15 @@
 							<span role="presentation" class="Icon Icon--heart Icon--medium"></span>
 							<div class="HeartAnimation"></div>
 						</div>
-						<span class="ProfileTweet-actionCount">
-							<span class="ProfileTweet-actionCountForPresentation" aria-hidden="true">12</span>
+					{% if favorite_count == 0 %}
+						<span class="ProfileTweet-actionCount ProfileTweet-actionCount--isZero">
+							<span class="ProfileTweet-actionCountForPresentation" aria-hidden="true"></span>
 						</span>
+					{% else %}
+						<span class="ProfileTweet-actionCount">
+							<span class="ProfileTweet-actionCountForPresentation" aria-hidden="true">{{ favorite_count }}</span>
+						</span>
+					{% endif %}
 					</button>
 				</div>
 				<div class="ProfileTweet-action ProfileTweet-action--dm">
@@ -134,9 +149,6 @@
 						<div class="IconContainer">
 							<span class="Icon Icon--medium Icon--dm"></span>
 						</div>
-						<span class="ProfileTweet-actionCount ProfileTweet-actionCount--isZero">
-							<span class="ProfileTweet-actionCountForPresentation" aria-hidden="true"></span>
-						</span>
 					</button>
 				</div>
 			</div>
