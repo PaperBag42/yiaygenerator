@@ -11,3 +11,4 @@ moviepy<=0.2.3.5
 imageio-ffmpeg
 
 twitter
+imgkit
