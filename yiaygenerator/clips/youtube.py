@@ -1,7 +1,5 @@
 """Downloads YIAY videos from Youtube."""
 
-from typing import ContextManager
-
 from ._logging import logger
 
 import youtube_dl
@@ -16,7 +14,7 @@ cache_path = Path('expr/cache')
 
 
 @contextlib.contextmanager
-def video(i: int, only_audio: bool) -> ContextManager[PathLike]:
+def video(i: int, only_audio: bool) -> PathLike:
 	"""
 	Downloads a video from YouTube.
 	If the video cannot be downloaded, tries to get it from a cache directory.
