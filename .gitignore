@@ -1,6 +1,8 @@
 # my stuff
 expr/
 
+externals/
+
 # output garbage
 *.webm
 *.mp4

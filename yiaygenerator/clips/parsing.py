@@ -10,7 +10,6 @@ from ._logging import logger
 import moviepy.video as mpy
 import moviepy.video.VideoClip
 import moviepy.video.io.VideoFileClip
-import moviepy.video.io.downloader
 import moviepy.video.tools.drawing
 import moviepy.video.fx.resize
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
@@ -24,7 +23,7 @@ from pathlib import Path
 from collections import Counter
 
 clips_path = Path('expr/clips/')
-avatar_path = Path('expr/avatar.jpeg')
+avatar_path = Path('externals/avatar.jpg')
 
 
 def make_all() -> None:
@@ -159,7 +158,6 @@ def _write(i: int, timestamps: List[Timestamp], end_card: Optional[CompositeVide
 		json.dump({**data, 'clipped': True}, file, separators=(',', ':'))
 
 
-AVATAR_URL = 'https://avatars0.githubusercontent.com/u/39616775?v=4'
 END_CARD_START = 379
 CLIP_SIZE = 1280, 720
 BOX_SIZE = 412, 231
@@ -176,8 +174,6 @@ def _end_card_overlay() -> CompositeVideoClip:
 	
 	:return: the clip object to use as overlay
 	"""
-	mpy.io.downloader.download_webfile(AVATAR_URL, avatar_path)
-	
 	avatar = mpy.VideoClip.ImageClip(str(avatar_path)) \
 		.fx(mpy.fx.resize.resize, height=BOX_SIZE[1])
 	center = avatar.w / 2, avatar.h / 2

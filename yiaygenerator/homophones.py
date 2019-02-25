@@ -8,7 +8,7 @@ from django.core.cache import cache
 
 import re
 
-HOMOPHONES_PATH = 'assets/homophone/homophone_list.csv'
+HOMOPHONES_PATH = 'externals/homophone_list.csv'
 
 _non_letter = re.compile(r'[^a-z]')
 
