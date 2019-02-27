@@ -1,9 +1,5 @@
 #!/usr/bin/env python
-"""
-Django manage script with an extra command to setup the video clips.
-"""
-
-from yiaygenerator import clips
+"""Django manage script with an extra command to setup the video clips."""
 
 import os
 from sys import argv
@@ -21,6 +17,7 @@ if __name__ == '__main__':
 		) from exc
 	
 	if 'setup' in argv:
+		from yiaygenerator import clips
 		if '--model' in argv:
 			clips.model_setup()
 		
