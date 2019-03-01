@@ -1,11 +1,13 @@
 """Collects twitter posts to use as YIAY answers."""
 
-from typing import Generator, Dict
+from typing import Container, Generator, Tuple, Dict, Optional, List
+
+from .. import homophones
 
 import twitter
 import django.template.loader
-import imgkit
 from django.utils import safestring
+import imgkit
 
 import contextlib
 import tempfile
@@ -13,10 +15,12 @@ import pathlib
 from os import environ, PathLike
 
 
-def tweets(hashtag: str) -> Generator[PathLike, None, None]:
+def tweets(hashtag: str, dictionary: Container[str]) -> Generator[Tuple[List[str], PathLike], None, None]:
 	"""
 	Gets and processes Twitter posts to be used as YIAY answers.
+	
 	:param hashtag: a Twitter hashtag to find tweets by
+	:param dictionary: words that Jack will be able to say
 	:return:
 	"""
 	if not hashtag.startswith('#'):
@@ -34,20 +38,60 @@ def tweets(hashtag: str) -> Generator[PathLike, None, None]:
 				q=hashtag, max_id=max_id,
 				lang='en',
 				tweet_mode='extended',
-				include_entities=True,  # default despite documentation saying otherwise?
 			)
 			# tweet_mode='extended' should disable truncating
 			# but I think I saw tweets get truncated still?
 			
-			yield from (images.enter_context(_image(tweet)) for tweet in res['statuses'])
+			for tweet in res['statuses']:
+				readable = _get_readable_text(tweet, dictionary)
+				if readable is not None:
+					yield images.enter_context(_image(tweet)), readable
 			
-			if 'next_results' not in res['search_metadata']:
+			next_res = res['search_metadata'].get('next_results')
+			if next_res is None:
 				break
-			max_id = min(s['id'] for s in res['statuses'])
+			max_id = next_res[8:26]  # '?max_id={max_id}&q=...'
 
 
-def _validate(tweet: Dict):
-	pass
+def _get_readable_text(tweet: Dict, dictionary: Container[str]) -> Optional[List[str]]:
+	"""
+	HARD PART #2
+	Transforms a tweet's content to text Jack can read.
+	
+	:param tweet: a tweet object from the Twitter API
+	:param dictionary: words that Jack will be able to say
+	:return: words for Jack to read, or None if the tweet is not readable
+	"""
+	start, end = tweet['display_text_range']
+	chars = list(tweet['full_text'][start:end])
+	diff = start
+	
+	# remove all entities?
+	for entity in sum(tweet['entities'].values(), []):
+		e_start, e_end = entity['indices']
+		
+		if e_start >= start and e_end <= end:
+			del chars[e_start - diff:e_end - diff]
+			diff += e_end - e_start
+	
+	# TODO: handle unicode characters (gonna be very hard)
+	
+	words = ''.join(chars).lower().split()
+	for i, word in enumerate(words):
+		new = homophones.get(word)
+		if new in dictionary:
+			words[i] = new
+			continue
+		
+		# try to split to letters
+		letters = [homophones.get(c) for c in word if homophones.non_letter.match(c)]
+		if all(letter in dictionary for letter in letters):
+			words[i:i + 1] = letters
+			continue
+		
+		return  # failed :(
+	
+	return words
 
 
 _template = django.template.loader.get_template('yiaygenerator/_tweet.html')
@@ -70,6 +114,7 @@ _options = {
 def _image(tweet: Dict) -> Generator[PathLike, None, None]:
 	"""
 	Converts data from a tweet to an image of the tweet.
+	
 	:param tweet: a tweet object from the Twitter API
 	:return: path to the tweet image file.
 	"""
@@ -86,11 +131,12 @@ def _image(tweet: Dict) -> Generator[PathLike, None, None]:
 def _get_display_text(tweet: Dict) -> safestring.SafeText:
 	"""
 	Transforms a tweet's content to HTML for displaying.
+	
 	:param tweet: a tweet object from the Twitter API
 	:return: an HTML representation of the tweet's text
 	"""
 	start, end = tweet['display_text_range']
-	text = list(tweet['full_text'][start:end])
+	chars = list(tweet['full_text'][start:end])
 	diff = start
 	
 	# make entities blue
@@ -99,13 +145,13 @@ def _get_display_text(tweet: Dict) -> safestring.SafeText:
 		e_start, e_end = entity['indices']
 		
 		if e_start >= start and e_end <= end:
-			text.insert(e_end - diff, '</b></a>')
-			text.insert(e_start - diff, '<a class="pretty-link" dir="ltr"><b>')
+			chars.insert(e_end - diff, '</b></a>')
+			chars.insert(e_start - diff, '<a class="pretty-link" dir="ltr"><b>')
 			diff -= 2
 	
 	# note: the Twitter API automatically HTML-escapes the content
 	# I'll be in trouble if it decides to stop doing that
-	return safestring.mark_safe(''.join(text))
+	return safestring.mark_safe(''.join(chars))
 
 
 def get_token() -> str:

@@ -10,7 +10,7 @@ import re
 
 HOMOPHONES_PATH = 'externals/homophone_list.csv'
 
-_non_letter = re.compile(r'[^a-z]')
+non_letter = re.compile(r'[^a-z]')
 
 
 def load() -> None:
