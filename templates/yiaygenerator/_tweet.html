@@ -12,11 +12,11 @@
 	{# <link rel="stylesheet" href="https://abs.twimg.com/a/1548278062/css/t1/nightmode_twitter_more_2.bundle.css" /> #}
 
 	<style>
-	/*
-	 * Disables the .icon selector
-	 * which is accidentally applied to elements with the .Icon class
-	 * (it doesn't on twitter for some reason)
-	 */
+{% comment %}
+	Disables the .icon selector
+	which is accidentally applied to elements with the .Icon class
+	(it doesn't on twitter for some reason)
+{% endcomment %}
 	.Icon {
 		vertical-align: baseline;
 		background-image: none;
@@ -25,6 +25,7 @@
 
 </head>
 
+{# wrappers #}
 <body
 		class="three-col logged-in ms-windows PermalinkPage no-nav-banners overlay-enabled supports-drag-and-drop"
 		dir="ltr"
@@ -50,6 +51,7 @@
 <ol class="stream-items">
 <li	class="stream-item">
 
+{# content #}
 <div class="tweet dismissible-content descendant permalink-descendant-tweet" id="main">
 	<div class="content">
 		<div class="stream-item-header">

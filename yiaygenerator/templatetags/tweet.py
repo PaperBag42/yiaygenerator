@@ -30,6 +30,7 @@ def emojies(text: str, autoescape: bool = True) -> safestring.SafeText:
 def count(num: int) -> str:
 	"""
 	Format for action counts on Twitter.
+	
 	:param num: number of replies/retweets/favorites on a tweet
 	:return: the number, along with 'K' for thousands and 'M' for millions
 	"""
@@ -44,6 +45,7 @@ def count(num: int) -> str:
 def age(created_at: str) -> str:
 	"""
 	Format for the date in which a tweet was created
+	
 	:param created_at: string representation of a date
 	:return:
 		- only hours if the tweet is from today
