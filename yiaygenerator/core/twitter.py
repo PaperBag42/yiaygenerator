@@ -9,10 +9,13 @@ import django.template.loader
 from django.utils import safestring
 import imgkit
 
+from os import environ, PathLike
+import logging
 import contextlib
 import tempfile
 import pathlib
-from os import environ, PathLike
+
+logger = logging.getLogger(__name__)
 
 
 def tweets(hashtag: str, dictionary: Container[str]) -> Generator[Tuple[List[str], PathLike], None, None]:
@@ -41,6 +44,7 @@ def tweets(hashtag: str, dictionary: Container[str]) -> Generator[Tuple[List[str
 			)
 			# tweet_mode='extended' should disable truncating
 			# but I think I saw tweets get truncated still?
+			logger.info(f'Loading {len(res["statuses"])} tweets with {hashtag}...')
 			
 			for tweet in res['statuses']:
 				readable = _get_readable_text(tweet, dictionary)
@@ -89,6 +93,7 @@ def _get_readable_text(tweet: Dict, dictionary: Container[str]) -> Optional[List
 			words[i:i + 1] = letters
 			continue
 		
+		logger.debug(f'Failed to convert tweet {tweet["id_str"]} to readable text.')
 		return  # failed :(
 	
 	return words
