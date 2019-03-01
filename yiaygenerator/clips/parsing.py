@@ -1,6 +1,6 @@
 """Generates video clips using the speech-to-text results."""
 
-from typing import Optional, Dict, Set, List, Iterable
+from typing import Optional, Dict, Set, Sequence, Iterable
 
 from .. import homophones
 from . import youtube, stt
@@ -27,9 +27,7 @@ avatar_path = Path('externals/avatar.jpg')
 
 
 def make_all() -> None:
-	"""
-	Makes video clips from all YIAY videos.
-	"""
+	"""Makes video clips from all YIAY videos."""
 	with _end_card_overlay() as end_card:
 		
 		i = 1
@@ -69,6 +67,7 @@ def get_list() -> Dict[str, Set[PathLike]]:
 	)
 
 
+# HARD PART #1
 _pattern = re.compile(
 	r'(?P<INTRO>.*? asked you )?'
 	r'.*? '
@@ -81,7 +80,7 @@ _pattern = re.compile(
 )
 
 
-def _group(text: str, timestamps: List[Timestamp]) -> bool:
+def _group(text: str, timestamps: Sequence[Timestamp]) -> bool:
 	"""
 	Tries to detect parts of the video that are typical
 	for a YIAY video.
@@ -117,7 +116,7 @@ def _group(text: str, timestamps: List[Timestamp]) -> bool:
 	return True
 
 
-def _write(i: int, timestamps: List[Timestamp], end_card: Optional[CompositeVideoClip]) -> None:
+def _write(i: int, timestamps: Sequence[Timestamp], end_card: Optional[CompositeVideoClip]) -> None:
 	"""
 	Writes clips from a YIAY video using a list of timestamps.
 	
@@ -145,10 +144,7 @@ def _write(i: int, timestamps: List[Timestamp], end_card: Optional[CompositeVide
 						sub, end_card.set_duration(sub.duration)
 					])
 				
-				sub.write_videofile(
-					str(dirname / f'{i:03d}-{word_count[word]:03d}.mp4'),
-					verbose=False, progress_bar=False
-				)
+				sub.write_videofile(str(dirname / f'{i:03d}-{word_count[word]:03d}.mp4'), logger=None)
 				word_count[word] += 1
 		
 	with open(json_path / f'{i:03d}.json', 'r+') as file:
@@ -224,10 +220,8 @@ def test(inds: Iterable[int]) -> None:
 		print(f'Group %{name}: {count}/{matched} ({100 * count / matched:.2f}%) videos.')
 
 
-def reset():
-	"""
-	Deletes the clips and resets the 'clipped' attribute in the JSON files.
-	"""
+def reset() -> None:
+	"""Deletes the clips and resets the 'clipped' attribute in the JSON files."""
 	if input('ARE YOU SURE ABOUT THAT [Y/N]') != 'N':  # just making sure
 		for word in clips_path.iterdir():
 			for clip in word.iterdir():
