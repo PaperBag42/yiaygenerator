@@ -1,10 +1,29 @@
 """Template filters for imitating Twitter statuses."""
 
 import django.template
+import django.utils.html
+from django.utils import safestring
 import django.utils.timezone
+import emoji
+
 from datetime import datetime, timedelta
 
 register = django.template.Library()
+
+
+@register.filter(needs_autoescape=True)
+def emojies(text: str, autoescape: bool = True) -> safestring.SafeText:
+	"""Replaces emojies in a text with Twitter's emoji icons."""
+	if autoescape:
+		text = django.utils.html.conditional_escape(text)
+	
+	return safestring.mark_safe(emoji.get_emoji_regexp().sub(lambda m: (
+		f'<img'
+		f' class="Emoji Emoji--forText"'
+		f' src="https://abs.twimg.com/emoji/v2/72x72/{"-".join(f"{ord(c):x}" for c in m[0])}.png"'
+		f' alt="{m[0]}"'
+		f'/>'
+	), text))
 
 
 @register.filter(is_safe=True)

@@ -12,3 +12,4 @@ imageio-ffmpeg
 
 twitter
 imgkit
+emoji

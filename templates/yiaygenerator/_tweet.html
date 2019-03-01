@@ -57,7 +57,7 @@
 				<img alt="" class="avatar" src="{{ user.profile_image_url_https }}" />
 
 				<span class="FullNameGroup">
-					<strong class="fullname show-popup-with-id u-textTruncate">{{ user.name }}</strong>
+					<strong class="fullname show-popup-with-id u-textTruncate">{{ user.name|emojies }}</strong>
 
 					<span class="UserBadges">
 					{% if user.verified %}
@@ -97,7 +97,7 @@
 				<span class="username u-dir u-textTruncate" dir="ltr">@<b>jacksfilms</b></span>
 	        </a>
 		</div>
-		<p class="TweetTextSize tweet-text" lang="en">{{ full_text }}</p>
+		<p class="TweetTextSize tweet-text" lang="en">{{ full_text|emojies }}</p>
 
 		<div class="stream-item-footer">
 			<div class="ProfileTweet-actionList" role="group" aria-label="Tweet actions">
