@@ -1,4 +1,11 @@
-"""Collects twitter posts to use as YIAY answers."""
+"""
+Collects twitter posts to use as YIAY answers.
+
+What it does:
+	- Searches for tweets containing a hashtag with the Twitter API
+	- Converts tweets to words with existing associated video clips
+	- Renders tweets to HTML and then to images using WKHtmlToPdf
+"""
 
 from typing import Container, Generator, Tuple, Dict, Optional, List
 
@@ -60,7 +67,7 @@ def tweets(hashtag: str, dictionary: Container[str]) -> Generator[Tuple[List[str
 def _get_readable_text(tweet: Dict, dictionary: Container[str]) -> Optional[List[str]]:
 	"""
 	HARD PART #2
-	Transforms a tweet's content to text Jack can read.
+	Converts a tweet's content to text Jack can read.
 	
 	:param tweet: a tweet object from the Twitter API
 	:param dictionary: words that Jack will be able to say
@@ -135,7 +142,7 @@ def _image(tweet: Dict) -> Generator[PathLike, None, None]:
 
 def _get_display_text(tweet: Dict) -> safestring.SafeText:
 	"""
-	Transforms a tweet's content to HTML for displaying.
+	Converts a tweet's content to HTML for displaying.
 	
 	:param tweet: a tweet object from the Twitter API
 	:return: an HTML representation of the tweet's text

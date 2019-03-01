@@ -1,4 +1,13 @@
-"""Generates video clips using the speech-to-text results."""
+"""
+Generates video clips using the speech-to-text results.
+
+What it does:
+	- Puts the video's transcript through a RegEx pattern,
+	  in order to capture the common phases of a YIAY video
+	  (intro, outro, etc.)
+	- Adds my avatar and a URL to the video's end card
+	- Writes each word or part to a separate video file
+"""
 
 from typing import Optional, Dict, Set, Sequence, Iterable
 
