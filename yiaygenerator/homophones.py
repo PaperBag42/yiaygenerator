@@ -4,16 +4,16 @@ to let the same video clips be used as different words,
 thus allowing broader usage of the video clips.
 """
 
-from django.core.cache import cache
+from typing import Dict
 
 import re
 
 HOMOPHONES_PATH = 'externals/homophone_list.csv'
 
-non_letter = re.compile(r'[^a-z]')
+invalid = re.compile(r'[^a-z]')
 
 
-def load() -> None:
+def _load() -> Dict[str, str]:
 	"""
 	Loads the homophones list from a CSV file
 	I stole from homophone.com.
@@ -26,7 +26,7 @@ def load() -> None:
 		next(file)
 		for line in file:
 			_, _, word, ind = line.split(',')
-			word = _non_letter.sub('', word.lower())
+			word = invalid.sub('', word.lower())
 			ind = int(ind)
 			
 			if i != ind:
@@ -35,11 +35,10 @@ def load() -> None:
 			else:
 				homophones[word] = homophone
 	
-	cache.set('homophones', homophones)
+		return homophones
 
 
-# TODO: check if it really needs to be cached
-# if not, revert 77f7f719
+_homophones = _load()
 
 
 def get(word: str) -> str:
@@ -51,5 +50,5 @@ def get(word: str) -> str:
 		The first homophone found for the the word,
 		or the given word if no homophone was found.
 	"""
-	word = _non_letter.sub('', word.lower())
-	return cache.get('homophones').get(word, word)
+	word = invalid.sub('', word.lower())
+	return _homophones.get(word, word)

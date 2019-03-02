@@ -95,7 +95,7 @@ def _get_readable_text(tweet: Dict, dictionary: Container[str]) -> Optional[List
 			continue
 		
 		# try to split to letters
-		letters = [homophones.get(c) for c in word if homophones.non_letter.match(c)]
+		letters = [homophones.get(c) for c in word if homophones.invalid.match(c)]
 		if all(letter in dictionary for letter in letters):
 			words[i:i + 1] = letters
 			continue

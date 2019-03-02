@@ -9,7 +9,7 @@ What it does:
 	- Writes each word or part to a separate video file
 """
 
-from typing import Optional, Dict, Set, Sequence, Iterable
+from typing import NewType, Optional, Dict, Set, Sequence, Iterable
 
 from .. import homophones
 from . import youtube, stt
@@ -66,7 +66,10 @@ def make_from(i: int, end_card: Optional[CompositeVideoClip] = None) -> None:
 		_write(i, timestamps, end_card)
 
 
-def get_list() -> Dict[str, Set[PathLike]]:
+ClipList = NewType('ClipList', Dict[str, Set[PathLike]])
+
+
+def get_list() -> ClipList:
 	"""
 	Returns a dict mapping words to paths
 	to the available clips.
@@ -134,6 +137,7 @@ def _write(i: int, timestamps: Sequence[Timestamp], end_card: Optional[Composite
 	:param end_card: an overlay clip to apply on end cards.
 	"""
 	word_count = Counter()
+	success = True
 	
 	with youtube.video(i, only_audio=False) as video:
 		with mpy.io.VideoFileClip.VideoFileClip(str(video)) as clip:
@@ -153,14 +157,25 @@ def _write(i: int, timestamps: Sequence[Timestamp], end_card: Optional[Composite
 						sub, end_card.set_duration(sub.duration)
 					])
 				
-				sub.write_videofile(str(dirname / f'{i:03d}-{word_count[word]:03d}.mp4'), logger=None)
+				try:
+					sub.write_videofile(str(dirname / f'{i:03d}-{word_count[word]:03d}.mp4'), logger=None)
+				except IOError:
+					logger.warning(f'Failed at {start:.2f}-{end:.2f}')
+					success = False
+				
 				word_count[word] += 1
-		
-	with open(json_path / f'{i:03d}.json', 'r+') as file:
+	
+	if success:
+		_set_clipped(json_path / f'{i:03d}.json', True)
+	
+
+def _set_clipped(path: PathLike, clipped: bool) -> None:
+	"""Updates a JSON file to indicate whether the video was successfully clipped."""
+	with open(path, 'r+') as file:
 		data = json.load(file)
 		file.seek(0)
 		file.truncate()
-		json.dump({**data, 'clipped': True}, file, separators=(',', ':'))
+		json.dump({**data, 'clipped': clipped}, file, separators=(',', ':'))
 
 
 END_CARD_START = 379
@@ -185,8 +200,8 @@ def _end_card_overlay() -> CompositeVideoClip:
 	
 	return CompositeVideoClip([
 		avatar
-			.set_position((int(AVATAR_POS[0] + BOX_SIZE[0] / 2 - center[0]), AVATAR_POS[1]))
-			.set_mask(mpy.VideoClip.ImageClip(mpy.tools.drawing.circle(
+			.set_position((AVATAR_POS[0] + BOX_SIZE[0] // 2 - center[0], AVATAR_POS[1]))  # put it in the top right box
+			.set_mask(mpy.VideoClip.ImageClip(mpy.tools.drawing.circle(  # make it circle shaped
 				avatar.size, center, min(center),
 			), ismask=True)),
 		mpy.VideoClip.TextClip(
@@ -236,9 +251,5 @@ def reset() -> None:
 			for clip in word.iterdir():
 				clip.unlink()
 		
-		for name in json_path.iterdir():
-			with open(name, 'r+') as file:
-				data = json.load(file)
-				file.seek(0)
-				file.truncate()
-				json.dump({**data, 'clipped': False}, file, separators=(',', ':'))
+		for path in json_path.iterdir():
+			_set_clipped(path, False)
