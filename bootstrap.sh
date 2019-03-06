@@ -13,7 +13,6 @@ sed -i 's/<policy domain="path" rights="none" pattern="@\*"\/>//g' /etc/ImageMag
 pip3 install -r $DIR/requirements.txt
 
 # static requirements
-wget https://avatars0.githubusercontent.com/u/39616775?v=4 -O $DIR/externals/avatar.jpg
 wget https://raw.githubusercontent.com/TSMMark/homophone/master/lib/assets/homophone_list.csv -P $DIR/externals/
 # wget -P $DIR/externals/css/ \
 # 	https://abs.twimg.com/a/1548278062/css/t1/{nightmode_twitter_core.bundle.css,nightmode_twitter_more_1.bundle.css}
