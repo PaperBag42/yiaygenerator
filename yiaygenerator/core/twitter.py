@@ -16,22 +16,20 @@ import django.template.loader
 from django.utils import safestring
 import imgkit
 
-from os import environ, PathLike
+from os import environ
+from tempfile import NamedTemporaryFile
 import logging
-import contextlib
-import tempfile
-import pathlib
 
 logger = logging.getLogger(__name__)
 
 
-def tweets(hashtag: str, dictionary: Container[str]) -> Generator[Tuple[List[str], PathLike], None, None]:
+def tweets(hashtag: str, dictionary: Container[str]) -> Generator[Tuple[List[str], NamedTemporaryFile], None, None]:
 	"""
 	Gets and processes Twitter posts to be used as YIAY answers.
 	
 	:param hashtag: a Twitter hashtag to find tweets by
 	:param dictionary: words that Jack will be able to say
-	:return:
+	:return: Pairs of tweet images and words to read
 	"""
 	if not hashtag.startswith('#'):
 		hashtag = f'#{hashtag}'
@@ -41,27 +39,26 @@ def tweets(hashtag: str, dictionary: Container[str]) -> Generator[Tuple[List[str
 		retry=True,
 	).search.tweets
 	
-	with contextlib.ExitStack() as images:
-		max_id = None
-		while True:
-			res = search(
-				q=hashtag, max_id=max_id,
-				lang='en',
-				tweet_mode='extended',
-			)
-			# tweet_mode='extended' should disable truncating
-			# but I think I saw tweets get truncated still?
-			logger.info(f'Loading {len(res["statuses"])} tweets with {hashtag}...')
-			
-			for tweet in res['statuses']:
-				readable = _get_readable_text(tweet, dictionary)
-				if readable is not None:
-					yield images.enter_context(_image(tweet)), readable
-			
-			next_res = res['search_metadata'].get('next_results')
-			if next_res is None:
-				break
-			max_id = next_res[8:26]  # '?max_id={max_id}&q=...'
+	max_id = None
+	while True:
+		res = search(
+			q=hashtag, max_id=max_id,
+			lang='en',
+			tweet_mode='extended',
+		)
+		# tweet_mode='extended' should disable truncating
+		# but I think I saw tweets get truncated still?
+		logger.info(f'Loading {len(res["statuses"])} tweets with {hashtag}...')
+		
+		for tweet in res['statuses']:
+			readable = _get_readable_text(tweet, dictionary)
+			if readable is not None:
+				yield _image(tweet), readable
+		
+		next_res = res['search_metadata'].get('next_results')
+		if next_res is None:
+			break
+		max_id = next_res[8:26]  # '?max_id={max_id}&q=...'
 
 
 def _get_readable_text(tweet: Dict, dictionary: Container[str]) -> Optional[List[str]]:
@@ -122,22 +119,21 @@ _options = {
 }
 
 
-@contextlib.contextmanager
-def _image(tweet: Dict) -> Generator[PathLike, None, None]:
+def _image(tweet: Dict) -> NamedTemporaryFile:
 	"""
 	Converts data from a tweet to an image of the tweet.
 	
 	:param tweet: a tweet object from the Twitter API
 	:return: path to the tweet image file.
 	"""
-	with tempfile.NamedTemporaryFile(suffix='.jpg') as file:
-		name = file.name
-		imgkit.from_string(_template.render({
-			**tweet,
-			'full_text': _get_display_text(tweet),
-		}), name, _options)
-		
-		yield pathlib.Path(name)
+	file = NamedTemporaryFile(suffix='.jpg')
+	
+	imgkit.from_string(_template.render({
+		**tweet,
+		'full_text': _get_display_text(tweet),
+	}), file.name, _options)
+	
+	return file
 
 
 def _get_display_text(tweet: Dict) -> safestring.SafeText:
