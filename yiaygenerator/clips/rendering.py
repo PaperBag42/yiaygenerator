@@ -43,7 +43,7 @@ def make_all() -> None:
 			try:
 				make_from(i, end_card)
 			except youtube.DownloadError:
-				pass
+				logger.error('Youtube failed to provide video')
 			except IndexError:
 				break
 			i += 1

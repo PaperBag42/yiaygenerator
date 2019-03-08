@@ -42,7 +42,7 @@ def video(i: int, only_audio: bool) -> Generator[PathLike, None, None]:
 		except DownloadError:
 			path = cache_path / path
 			if not path.exists():
-				logger.error('Youtube failed to provide video')
+				raise
 	
 	if not path.exists():
 		raise IndexError(i)
