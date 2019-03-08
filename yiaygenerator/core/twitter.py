@@ -53,7 +53,7 @@ def tweets(hashtag: str, dictionary: Container[str]) -> Generator[Tuple[List[str
 		for tweet in res['statuses']:
 			readable = _get_readable_text(tweet, dictionary)
 			if readable is not None:
-				yield _image(tweet), readable
+				yield readable, _image(tweet)
 		
 		next_res = res['search_metadata'].get('next_results')
 		if next_res is None:

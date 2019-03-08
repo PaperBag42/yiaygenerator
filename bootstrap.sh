@@ -6,7 +6,7 @@ DIR=${1:-.}
 apt update
 apt install -y ffmpeg imagemagick python3-pip
 
-# allow myself to use imgamagick (?)
+# allow myself to use imagemagick (?)
 sed -i 's/<policy domain="path" rights="none" pattern="@\*"\/>//g' /etc/ImageMagick-6/policy.xml
 
 # python requirements
