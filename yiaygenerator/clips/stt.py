@@ -51,8 +51,7 @@ def speech_to_text(i: int) -> Tuple[bool, str, List[Timestamp]]:
 		return data['clipped'], data['transcript'], [Timestamp(*s) for s in data['timestamps']]
 	else:
 		with youtube.video(i, only_audio=True) as audio:
-			with open(audio, 'rb') as file:
-				return (False, *_process(path, _request(file)))
+			return (False, *_process(path, _request(audio)))
 
 
 def _request(stream: BinaryIO) -> Dict:

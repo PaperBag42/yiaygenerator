@@ -22,7 +22,7 @@ import moviepy.video.io.VideoFileClip
 import moviepy.video.tools.drawing
 import moviepy.video.fx.resize
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
-
+import youtube_dl
 from django.core.cache import cache
 
 import re
@@ -42,7 +42,7 @@ def make_all() -> None:
 		while True:
 			try:
 				make_from(i, end_card)
-			except youtube.DownloadError:
+			except youtube_dl.DownloadError:
 				logger.error('Youtube failed to provide video')
 			except IndexError:
 				break
@@ -139,7 +139,7 @@ def _write(i: int, timestamps: Sequence[Timestamp], end_card: Optional[Composite
 	success = True
 	
 	with youtube.video(i, only_audio=False) as video:
-		with mpy.io.VideoFileClip.VideoFileClip(str(video)) as clip:
+		with mpy.io.VideoFileClip.VideoFileClip(video.name) as clip:
 			
 			logger.info(f'Writing {len(timestamps)} clips...')
 			for word, start, end in timestamps:
