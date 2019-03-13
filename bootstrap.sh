@@ -10,10 +10,10 @@ apt install -y ffmpeg imagemagick python3-pip
 sed -i 's/<policy domain="path" rights="none" pattern="@\*"\/>//g' /etc/ImageMagick-6/policy.xml
 
 # python requirements
-pip3 install -r $DIR/requirements.txt
+pip3 install -r ${DIR}/requirements.txt
 
 # static requirements
-wget https://raw.githubusercontent.com/TSMMark/homophone/master/lib/assets/homophone_list.csv -P $DIR/externals/
+wget https://raw.githubusercontent.com/TSMMark/homophone/master/lib/assets/homophone_list.csv -P ${DIR}/externals/
 # wget -P $DIR/externals/css/ \
 # 	https://abs.twimg.com/a/1548278062/css/t1/{nightmode_twitter_core.bundle.css,nightmode_twitter_more_1.bundle.css}
 

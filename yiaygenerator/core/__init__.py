@@ -1,3 +1,3 @@
-"""
-Main generator functionality.
-"""
+"""Main generator functionality."""
+
+from .rendering import yiay

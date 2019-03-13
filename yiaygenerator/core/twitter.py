@@ -51,8 +51,10 @@ def tweets(hashtag: str, dictionary: Container[str]) -> Generator[Tuple[List[str
 		logger.info(f'Loading {len(res["statuses"])} tweets with {hashtag}...')
 		
 		for tweet in res['statuses']:
+			tweet = tweet.get('retweeted_status', tweet)  # if the tweet is a retweet, switch to original
 			readable = _get_readable_text(tweet, dictionary)
 			if readable is not None:
+				logger.debug(f'Using tweet {tweet["id_str"]}')
 				yield readable, _image(tweet)
 		
 		next_res = res['search_metadata'].get('next_results')
@@ -92,7 +94,7 @@ def _get_readable_text(tweet: Dict, dictionary: Container[str]) -> Optional[List
 			continue
 		
 		# try to split to letters
-		letters = [homophones.get(c) for c in word if homophones.invalid.match(c)]
+		letters = [homophones.get(c) for c in word if not homophones.invalid.match(c)]
 		if all(letter in dictionary for letter in letters):
 			words[i:i + 1] = letters
 			continue

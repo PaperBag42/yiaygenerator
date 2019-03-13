@@ -31,8 +31,8 @@ def yiay(question: str, hashtag: str, duration: float) -> NamedTemporaryFile:
 		_build_question_clip(question, s)
 		s.add_word('%START')
 		
-		s.add_word('and')
-		s.add_word('finally')
+		s.add_word(homophones.get('and'))
+		s.add_word(homophones.get('finally'))
 		
 		s.add_clip(VideoFileClip(str(sorted(clip_list['%OUTRO'])[-1])))  # only use the latest outro
 		s.add_word('%END')
@@ -69,7 +69,6 @@ class _ClipStack(ExitStack):
 	
 	def make_word(self, word: str) -> VideoFileClip:
 		"""Gets a clip object of Jack saying a word."""
-		word = homophones.get(word)
 		if not self._clips[word]:
 			self._clips[word] = self._original[word].copy()
 		
@@ -93,13 +92,13 @@ def _build_question_clip(question: str, s: _ClipStack) -> None:
 	:param s: the stack to push the clips into
 	"""
 	reading_clip = s.enter_context(concatenate_videoclips([
-		s.make_word(word) for word in question.split()
+		s.make_word(homophones.get(word)) for word in question.split()
 	]))
 	
 	s.add_clip(CompositeVideoClip([
 		reading_clip,
-		mpy.VideoClip.TextClip(
-			question if question.endswith('?') else f'{question}?',
+		mpy.VideoClip.TextClip(  # TODO: it doesn't look exactly like jack's font
+			question,
 			color='white', font='Cooper-Black', fontsize=64,
 			stroke_color='black', stroke_width=3,
 		).set_duration(reading_clip.duration).set_position(('center', 'bottom'))
@@ -117,7 +116,7 @@ def _build_answer_clip(answer: str, image: NamedTemporaryFile, s: _ClipStack, in
 	:param index: the index to insert the clip at in the stack
 	"""
 	reading_clip = s.enter_context(concatenate_videoclips([
-		s.make_word(word) for word in answer
+		s.make_word(homophones.get(word)) for word in answer
 	]))
 	clip = s.enter_context(CompositeVideoClip([
 		reading_clip,
