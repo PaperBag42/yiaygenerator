@@ -160,10 +160,9 @@ _end_card = _build_end_card_overlay()
 
 def reset() -> None:
 	"""Deletes the clips and resets the 'clipped' attribute in the JSON files."""
-	if input('ARE YOU SURE ABOUT THAT [Y/N]') != 'N':  # just making sure
-		for word in clips_path.iterdir():
-			for clip in word.iterdir():
-				clip.unlink()
-		
-		for path in json_path.iterdir():
-			_set_clipped(path, False)
+	for word in clips_path.iterdir():
+		for clip in word.iterdir():
+			clip.unlink()
+	
+	for path in json_path.iterdir():
+		_set_clipped(path, False)
