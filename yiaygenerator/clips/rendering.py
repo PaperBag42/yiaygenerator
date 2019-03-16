@@ -2,17 +2,15 @@
 Generates video clips using the speech-to-text results.
 
 What it does:
-	- Puts the video's transcript through a RegEx pattern,
-	  in order to capture the common phases of a YIAY video
-	  (intro, outro, etc.)
+	-
 	- Adds my avatar and a URL to the video's end card
 	- Writes each word or part to a separate video file
 """
 
-from typing import NewType, Dict, Set, Sequence, Iterable
+from typing import NewType, Dict, Set, Sequence
 
 from .. import homophones
-from . import youtube, stt
+from . import youtube, stt, parsing
 from .stt import Timestamp, json_path
 from ._logging import logger
 
@@ -25,7 +23,6 @@ from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 import youtube_dl
 from django.core.cache import cache
 
-import re
 import json
 from os import PathLike
 from pathlib import Path
@@ -57,7 +54,7 @@ def make_from(i: int) -> None:
 	try:
 		clipped, text, timestamps = stt.speech_to_text(i)
 		
-		if not clipped and _group(text, timestamps):  # don't use videos that don't match
+		if not clipped and parsing.parse(text, timestamps):  # don't use videos that don't match
 			_write(i, timestamps)
 	
 	except youtube_dl.DownloadError:
@@ -75,55 +72,6 @@ def get_list() -> ClipList:
 	return cache.get_or_set(
 		'clips', lambda: {p.name: set(p.iterdir()) for p in clips_path.iterdir()}
 	)
-
-
-# HARD PART #1
-_pattern = re.compile(
-	r'(?P<INTRO>.*? asked you )?'
-	r'.*? '
-	r'(?P<START>(here .*? )?answers )?'  # breaks a lot (he sometimes says "let's go" or other random stuff)
-	r'.* '
-	# TODO: sponsor
-	r'(?P<OUTRO>(leave|let) .*? YIAY )'
-	# r'(?P<END>.*? episode )'  # TODO: add the user's previous clip?
-	r'(?P<END>.* )'
-)
-
-
-def _group(text: str, timestamps: Sequence[Timestamp]) -> bool:
-	"""
-	Tries to detect parts of the video that are typical
-	for a YIAY video.
-	Groups the detected parts into single clips in the timestamp list.
-	
-	:param text: the video's full transcript to be matched against a RegEx pattern
-	:param timestamps: the timestamps list to be modified
-	:return: true if the match succeeded
-	"""
-	match = _pattern.fullmatch(text)
-	if match is None:
-		logger.error('RegEx match failed.')
-		return False
-	
-	diff = 0
-	for group, sub in match.groupdict().items():
-		if not sub:  # empty or None
-			logger.warning(f'Group %{group} was not captured.')
-			continue
-		
-		# replaces all timestamps in the span with a single timestamp
-		count = sub.count(' ')
-		start = text[:match.start(group)].count(' ') - diff
-		end = start + count
-		
-		timestamps[start:end] = [Timestamp(
-			f'%{group}',
-			timestamps[start].start,
-			timestamps[end - 1].end
-		)]
-		diff += count - 1  # the difference in word count
-	
-	return True
 
 
 def _write(i: int, timestamps: Sequence[Timestamp]) -> None:
@@ -211,39 +159,6 @@ def _build_end_card_overlay() -> CompositeVideoClip:
 
 # no need to close this clip, it's just some imageio arrays
 _end_card = _build_end_card_overlay()
-
-
-def test(inds: Iterable[int]) -> None:
-	"""
-	Tests the RegEx pattern against a range of YIAY videos.
-	
-	:param inds: indexes of videos to test
-	"""
-	groups = Counter()
-	matched = 0
-	total = 0
-	for i in inds:
-		logger.ind = i
-		total += 1
-		
-		text = stt.speech_to_text(i)[1]
-		match = _pattern.match(text)
-		
-		if match is None:
-			logger.error('RegEx match failed.')
-			continue
-		
-		matched += 1
-		for name, part in match.groupdict().items():
-			if not part:
-				logger.warning(f'Group %{name} was not captured.')
-				continue
-			groups[name] += 1
-			logger.info(f'Group %{name}: {100 * len(part) / len(text):.2f}% of video.')
-			
-	print(f'Matched {matched}/{total} ({100 * matched / total:.2f}%) videos.')
-	for name, count in groups.items():
-		print(f'Group %{name}: {count}/{matched} ({100 * count / matched:.2f}%) videos.')
 
 
 def reset() -> None:
