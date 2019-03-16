@@ -38,6 +38,7 @@ INSTALLED_APPS = [
 	'django.contrib.sessions',
 	'django.contrib.messages',
 	'django.contrib.staticfiles',
+	'channels',
 	'yiaygenerator',
 ]
 
@@ -71,6 +72,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'yiaygenerator.wsgi.application'
+ASGI_APPLICATION = 'yiaygenerator.routing.application'
 
 # LOGGING = {
 # 	'version': 1,
