@@ -9,7 +9,7 @@ What it does:
 	- Writes each word or part to a separate video file
 """
 
-from typing import NewType, Optional, Dict, Set, Sequence, Iterable
+from typing import NewType, Dict, Set, Sequence, Iterable
 
 from .. import homophones
 from . import youtube, stt
@@ -36,33 +36,32 @@ clips_path = Path('expr/clips/')
 
 def make_all() -> None:
 	"""Makes video clips from all YIAY videos."""
-	with _end_card_overlay() as end_card:
-		
-		i = 1
-		while True:
-			try:
-				make_from(i, end_card)
-			except youtube_dl.DownloadError:
-				logger.error('Youtube failed to provide video')
-			except IndexError:
-				break
-			i += 1
+	i = 1
+	while True:
+		try:
+			make_from(i)
+		except IndexError:
+			break
+		i += 1
 	
 	cache.set('clips', {p.name: set(p.iterdir()) for p in clips_path.iterdir()})
 
 
-def make_from(i: int, end_card: Optional[CompositeVideoClip] = None) -> None:
+def make_from(i: int) -> None:
 	"""
 	Makes video clips from a single YIAY video.
 	
 	:param i: the video's index in the playlist
-	:param end_card: an overlay clip to apply on end cards.
 	"""
 	logger.ind = i
-	clipped, text, timestamps = stt.speech_to_text(i)
+	try:
+		clipped, text, timestamps = stt.speech_to_text(i)
+		
+		if not clipped and _group(text, timestamps):  # don't use videos that don't match
+			_write(i, timestamps)
 	
-	if not clipped and _group(text, timestamps):  # don't use videos that don't match
-		_write(i, timestamps, end_card)
+	except youtube_dl.DownloadError:
+		logger.error('Youtube failed to provide video')
 
 
 ClipList = NewType('ClipList', Dict[str, Set[PathLike]])
@@ -127,13 +126,12 @@ def _group(text: str, timestamps: Sequence[Timestamp]) -> bool:
 	return True
 
 
-def _write(i: int, timestamps: Sequence[Timestamp], end_card: Optional[CompositeVideoClip]) -> None:
+def _write(i: int, timestamps: Sequence[Timestamp]) -> None:
 	"""
 	Writes clips from a YIAY video using a list of timestamps.
 	
 	:param i: the video's index
 	:param timestamps: the timestamps list
-	:param end_card: an overlay clip to apply on end cards.
 	"""
 	word_count = Counter()
 	success = True
@@ -150,10 +148,10 @@ def _write(i: int, timestamps: Sequence[Timestamp], end_card: Optional[Composite
 					dirname.mkdir()
 				
 				sub = clip.subclip(start, end)
-				if word == '%END' and i >= END_CARD_START and end_card is not None:
+				if word == '%END' and i >= END_CARD_START:
 					logger.info('Applying overlay to end card.')
 					sub = mpy.compositing.CompositeVideoClip.CompositeVideoClip([
-						sub, end_card.set_duration(sub.duration)
+						sub, _end_card.set_duration(sub.duration)
 					])
 				
 				try:
@@ -185,7 +183,7 @@ TEXT_POS = 828, 361
 AVATAR_POS = 828, 101
 
 
-def _end_card_overlay() -> CompositeVideoClip:
+def _build_end_card_overlay() -> CompositeVideoClip:
 	"""
 	Builds an overlay clip to apply on end cards.
 	Currently contains:
@@ -209,6 +207,10 @@ def _end_card_overlay() -> CompositeVideoClip:
 			font='Cooper-Black', size=BOX_SIZE,
 		).set_position(TEXT_POS),
 	], size=CLIP_SIZE)
+
+
+# no need to close this clip, it's just some imageio arrays
+_end_card = _build_end_card_overlay()
 
 
 def test(inds: Iterable[int]) -> None:
