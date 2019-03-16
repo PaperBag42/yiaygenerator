@@ -85,6 +85,10 @@ def _get_readable_text(tweet: Dict, dictionary: Container[str]) -> Optional[List
 			diff += e_end - e_start
 	
 	# TODO: handle unicode characters (gonna be very hard)
+	# some ideas:
+	# convert numbers to names
+	# convert russian letters and such to letters that look the same
+	# detect camelCase / PascalCase
 	
 	words = ''.join(chars).lower().split()
 	for i, word in enumerate(words):
