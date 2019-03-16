@@ -82,7 +82,6 @@ def _write(i: int, timestamps: Sequence[Timestamp]) -> None:
 	:param timestamps: the timestamps list
 	"""
 	word_count = Counter()
-	success = True
 	
 	with youtube.video(i, only_audio=False) as video:
 		with mpy.io.VideoFileClip.VideoFileClip(video.name) as clip:
@@ -106,12 +105,10 @@ def _write(i: int, timestamps: Sequence[Timestamp]) -> None:
 					sub.write_videofile(str(dirname / f'{i:03d}-{word_count[word]:03d}.mp4'), logger=None)
 				except IOError:
 					logger.warning(f'Failed at {start:.2f}-{end:.2f}')
-					success = False
 				
 				word_count[word] += 1
 	
-	if success:
-		_set_clipped(json_path / f'{i:03d}.json', True)
+	_set_clipped(json_path / f'{i:03d}.json', True)
 	
 
 def _set_clipped(path: PathLike, clipped: bool) -> None:
