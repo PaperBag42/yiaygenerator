@@ -16,16 +16,27 @@ from ._logging import logger
 import re
 import collections
 
-_pattern = re.compile(
-	r'(?P<INTRO>.*? asked you )?'
-	r'.*? '
-	r'(?P<START>(here .*? )?answers )?'  # breaks a lot (he sometimes says "let's go" or other random stuff)
-	r'.* '
-	# TODO: sponsor
-	r'(?P<OUTRO>(leave|let) .*? YIAY )'
-	# r'(?P<END>.*? episode )'  # TODO: add the user's previous clip?
-	r'(?P<END>.* )'
-)
+# Turns out there's a limit to what a single RegEx can do (who knew?).
+# So I'll be using a bunch of different patterns as fallback to each other.
+# Good idea right?
+patterns = [
+	re.compile(
+		r'(?P<INTRO>.*? asked you )?'
+		r'.*? '
+		r'(?P<START>here .{,50}?answers )'  # breaks a lot (he sometimes says "let's go" or other random stuff)
+		r'.* '
+		# TODO: sponsor
+		r'(?P<OUTRO>(leave|let) .*? YIAY )'
+		# r'(?P<END>.*? episode )'  # TODO: add the user's previous clip?
+		r'(?P<END>.*)'
+	),
+	re.compile(
+		r'(?P<INTRO>.*? asked you )?'
+		r'.* '
+		r'(?P<OUTRO>(leave|let) .*? YIAY )'
+		r'(?P<END>.*)'
+	),
+]
 
 
 def parse(text: str, timestamps: Sequence[Timestamp]) -> bool:
@@ -37,8 +48,11 @@ def parse(text: str, timestamps: Sequence[Timestamp]) -> bool:
 	:param timestamps: the timestamps list to be modified
 	:return: true if the match succeeded
 	"""
-	match = _pattern.fullmatch(text)
-	if match is None:
+	for pattern in patterns:
+		match = pattern.fullmatch(text)
+		if match is not None:
+			break
+	else:
 		logger.error('RegEx match failed.')
 		return False
 	
@@ -77,9 +91,12 @@ def test(inds: Iterable[int]) -> None:
 		total += 1
 		
 		text = stt.speech_to_text(i)[1]
-		match = _pattern.match(text)
 		
-		if match is None:
+		for pattern in patterns:
+			match = pattern.fullmatch(text)
+			if match is not None:
+				break
+		else:
 			logger.error('RegEx match failed.')
 			continue
 		
