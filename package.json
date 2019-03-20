@@ -1,0 +1,38 @@
+{
+  "name": "yiaygenerator",
+  "version": "2019.3.20",
+  "description": "A website that generates videos based on the JacksFilms YIAY series",
+  "scripts": {
+    "start": "./node_modules/webpack/bin/webpack.js -d"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PaperBag42/yiaygenerator.git"
+  },
+  "author": "PaperBag42",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/PaperBag42/yiaygenerator/issues"
+  },
+  "homepage": "https://github.com/PaperBag42/yiaygenerator#readme",
+  "devDependencies": {
+    "@babel/core": "^7.4.0",
+    "babel-loader": "^8.0.5",
+    "babel-plugin-transform-react-jsx": "^6.24.1",
+    "webpack": "^4.29.6",
+    "webpack-cli": "^3.3.0"
+  },
+  "dependencies": {
+    "mithril": "^2.0.0-rc.4"
+  },
+  "babel": {
+    "plugins": [
+      [
+        "transform-react-jsx",
+        {
+          "pragma": "m"
+        }
+      ]
+    ]
+  }
+}

@@ -4,13 +4,16 @@ DIR=${1:-.}
 
 # binary requirements
 apt update
-apt install -y ffmpeg imagemagick python3-pip
+apt install -y ffmpeg imagemagick python3-pip npm
 
 # allow myself to use imagemagick (?)
 sed -i 's/<policy domain="path" rights="none" pattern="@\*"\/>//g' /etc/ImageMagick-6/policy.xml
 
 # python requirements
 pip3 install -r ${DIR}/requirements.txt
+
+# frontend requirements
+npm install --no-bin-links
 
 # static requirements
 wget https://raw.githubusercontent.com/TSMMark/homophone/master/lib/assets/homophone_list.csv -P ${DIR}/externals/
