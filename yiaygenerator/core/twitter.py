@@ -98,10 +98,10 @@ def _get_readable_text(tweet: Dict, dictionary: Container[str]) -> Optional[List
 			continue
 		
 		# try to split to letters
-		letters = [homophones.get(c) for c in word if not homophones.invalid.match(c)]
-		if all(letter in dictionary for letter in letters):
-			words[i:i + 1] = letters
-			continue
+		# letters = [homophones.get(c) for c in word if not homophones.invalid.match(c)]
+		# if all(letter in dictionary for letter in letters):
+		# 	words[i:i + 1] = letters
+		# 	continue
 		
 		logger.debug(f'Failed to convert tweet {tweet["id_str"]} to readable text.')
 		return  # failed :(
