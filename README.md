@@ -2,10 +2,8 @@
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/3b14d39227e64bca8065d0dacd2e91bd)](https://app.codacy.com/app/PaperBag42/yiaygenerator?utm_source=github.com&utm_medium=referral&utm_content=PaperBag42/yiaygenerator&utm_campaign=Badge_Grade_Dashboard)
 
-My experience tells me to stop writing readme's
-before finishing the project.
-
-**But FUCK THAT, I'M TOO HYPED**
+The website that automatically generates a fresh new episode in Jacksfilms' YIAY series, is almost complete!
+(I'm gonna finish it, I promise)
 
 ## The Plan
 1.  You enter the website.
@@ -16,17 +14,20 @@ before finishing the project.
 6.  I get first place on the next Jack's Challenge.
 
 ### TODO
--   [x] Youtube downloading
--   [x] Speech to Text
--   [ ] Video editing
--   [ ] Twitter
--   [ ] Frontend
+-   [ ] Finish frontend & input validation
+-   [ ] Use a database somehow
+-   [ ] Use wkhtmltopdf without subprocesses
+-   [ ] Add a sponsor and a clip from the previous video
+-   [ ] Improve the hard parts
+-   [ ] Ask homophone.com to add a lisence before I get in trouble
 
 ### Tools
 -   Django
 -   Youtube-DL
 -   Watson Developer Cloud
 -   Moviepy
+-   Wkhtmltopdf
+-   Mithril.js
 
 ### Q&A
 
